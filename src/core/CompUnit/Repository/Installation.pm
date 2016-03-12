@@ -332,6 +332,7 @@ sub MAIN(:$name is copy, :$auth, :$ver, *@, *%) {
                 $dist<provides>{$spec.short-name}<pm pm6>.first(*.so)<file>
             );
             my $*RESOURCES = Distribution::Resources.new(:repo(self), :$dist-id);
+            my $*DISTRIBUTION = Distribution.new(|$dist);
             my $id = $loader.basename;
             my $handle = $precomp.try-load($id, $loader);
             my $precompiled = defined $handle;
@@ -345,12 +346,18 @@ sub MAIN(:$name is copy, :$auth, :$ver, *@, *%) {
                 :repo(self),
                 :repo-id($id),
                 :$precompiled,
-                :distribution(Distribution.new(|$dist)),
+                :distribution($*DISTRIBUTION),
             );
             return %!loaded{$compunit.short-name} = $compunit;
         }
         return self.next-repo.need($spec, $precomp) if self.next-repo;
         X::CompUnit::UnsatisfiedDependency.new(:specification($spec)).throw;
+    }
+
+    method dist($dist-id --> Distribution) {
+        if $.prefix.child('dist').child($dist-id) -> $file {
+            Distribution.new(|from-json $file.IO.slurp)
+        }
     }
 
     method resource($dist-id, $key) {

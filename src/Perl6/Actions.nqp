@@ -2503,6 +2503,22 @@ class Perl6::Actions is HLL::Actions does STDActions {
                 $past := QAST::WVal.new( :value($*W.find_symbol(['Nil'])) );
             }
         }
+        elsif $name eq '$?DISTRIBUTION' {
+            my $dist := nqp::getlexdyn('$*DISTRIBUTION');
+            unless $dist {
+                my $Dist := $*W.find_symbol(['Distribution']);
+                $dist := $Dist.from-precomp();
+            }
+            if $dist {
+                $past := QAST::WVal.new( :value($dist) );
+                if nqp::isnull(nqp::getobjsc($dist)) {
+                    $*W.add_object($dist);
+                }
+            }
+            else {
+                $past := QAST::WVal.new( :value($*W.find_symbol(['Nil'])) );
+            }
+        }
         elsif $name eq '&?BLOCK' || $name eq '&?ROUTINE' {
             if $*IN_DECL eq 'variable' {
                 $*W.throw($/, 'X::Syntax::Variable::Twigil',

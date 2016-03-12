@@ -1,3 +1,5 @@
+role CompUnit::Repository { ... }
+class CompUnit::RepositoryRegistry is repr('Uninstantiable') { ... }
 class Distribution {
     has $.name;
     has $.auth;
@@ -31,10 +33,17 @@ class Distribution {
     method id() {
         return nqp::sha1(self.Str);
     }
+    method from-precomp() {
+        if %*ENV<RAKUDO_PRECOMP_DIST> -> \dist {
+            my %data := from-json dist;
+            CompUnit::RepositoryRegistry.repository-for-spec(%data<repo>).dist(%data<dist-id>)
+        }
+        else {
+            Nil
+        }
+    }
 }
 
-role CompUnit::Repository { ... }
-class CompUnit::RepositoryRegistry is repr('Uninstantiable') { ... }
 class Distribution::Resources does Associative {
     has Str $.dist-id;
     has Str $.repo;

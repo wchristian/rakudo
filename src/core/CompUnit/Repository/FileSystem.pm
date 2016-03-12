@@ -132,6 +132,12 @@ class CompUnit::Repository::FileSystem does CompUnit::Repository::Locally does C
          !! ();
     }
 
+    method dist($dist-id --> Distribution) {
+        if ('META6.json', 'META.info').map({$.prefix.parent.child($_)}).first(*.f) -> $file {
+            Distribution.new(|from-json $file.IO.slurp)
+        }
+    }
+
     method resource($dist-id, $key) {
         $.prefix.parent.child('resources').child($key);
     }
