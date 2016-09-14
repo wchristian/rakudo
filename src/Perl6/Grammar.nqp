@@ -61,7 +61,7 @@ role STD {
     token starter { <!> }
     token stopper { <!> }
 
-    my %quote_lang_cache;
+    my %quote_lang_cache := nqp::hash();
     method quote_lang($l, $start, $stop, @base_tweaks?, @extra_tweaks?) {
         sub lang_key() {
             my $stopstr := nqp::istype($stop,VMArray) ?? nqp::join(' ',$stop) !! $stop;
@@ -99,7 +99,6 @@ role STD {
 
         # Get language from cache or derive it.
         my $key := lang_key();
-        nqp::ifnull(%quote_lang_cache, %quote_lang_cache := nqp::hash());
         nqp::existskey(%quote_lang_cache, $key) && $key ne 'NOCACHE'
             ?? %quote_lang_cache{$key}
             !! (%quote_lang_cache{$key} := con_lang());
@@ -1686,7 +1685,7 @@ grammar Perl6::Grammar is HLL::Grammar does STD {
 
     token term:sym<fatarrow>           { <fatarrow> }
     token term:sym<colonpair>          { <colonpair> }
-    token term:sym<variable>           { <variable> { $*VAR := $<variable> } }
+    token term:sym<variable>           { <variable> { $*VAR := $<variable> unless $*VAR; } }  # maybe desigilname already set it
     token term:sym<package_declarator> { <package_declarator> }
     token term:sym<scope_declarator>   { <scope_declarator> }
     token term:sym<routine_declarator> { <routine_declarator> }
@@ -2016,7 +2015,6 @@ grammar Perl6::Grammar is HLL::Grammar does STD {
             [ <?{ $*IN_DECL }> <.typed_panic: 'X::Syntax::Variable::IndirectDeclaration'> ]?
             <variable> {
                 $*VAR := $<variable>;
-                self.check_variable($*VAR);
             }
         | <longname>
         ]
@@ -3793,11 +3791,16 @@ grammar Perl6::Grammar is HLL::Grammar does STD {
             [
             || <?{ $*QSIGIL eq '$' }> [ <postfixish>+! <?{ bracket_ending($<postfixish>) }> ]**0..1
             ||                          <postfixish>+! <?{ bracket_ending($<postfixish>) }>
-            || { $*VAR := 0 } <!>
             ]
         || <!{ $*QSIGIL }> <postfixish>*
         ]
-        { self.check_variable($*VAR) if $*VAR; $*ARG_FLAT_OK := $orig_arg_flat_ok; }
+        {
+            if $*VAR {
+                self.check_variable($*VAR);
+                $*VAR := 0;
+            }
+            $*ARG_FLAT_OK := $orig_arg_flat_ok;
+        }
     }
 
     token arg_flat_nok {
@@ -4260,7 +4263,7 @@ grammar Perl6::Grammar is HLL::Grammar does STD {
 
     token infix:sym<?? !!> {
         :my $*GOAL := '!!';
-        '??'
+        $<sym>='??'
         <.ws>
         <EXPR('i=')>
         [ '!!'
@@ -4845,17 +4848,8 @@ grammar Perl6::QGrammar is HLL::Grammar does STD {
     }
 
     role ww {
-        token escape:sym<' '> {
-            <?[']> <quote=.LANG('MAIN','quote')>
-        }
-        token escape:sym<‘ ’> {
-            <?[‘]> <quote=.LANG('MAIN','quote')>
-        }
-        token escape:sym<" "> {
-            <?["]> <quote=.LANG('MAIN','quote')>
-        }
-        token escape:sym<“ ”> {
-            <?[“]> <quote=.LANG('MAIN','quote')>
+        token escape:sym<'> {
+            <?[ ' " ‘ ‚ ’ “ „ ” ｢ ]> <quote=.LANG('MAIN','quote')>
         }
         token escape:sym<colonpair> {
             <?[:]> <!RESTRICTED> <colonpair=.LANG('MAIN','colonpair')>
