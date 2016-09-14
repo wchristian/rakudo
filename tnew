@@ -1,0 +1,2 @@
+#!/bin/bash
+prove -e './perl6 -Ilib -MTest' -vlr test.t

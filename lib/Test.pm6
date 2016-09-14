@@ -1,22 +1,63 @@
 unit module Test;
-my $Tester;
+class Tester { ... }
+my @Testers = Tester.new;
+END @Testers[0].cleanup;
 
-$Tester = .new given class {
+multi plan (Cool $n)    is export { @Testers[0].plan: $n; }
+multi plan (Whatever $) is export {} # no plan, by default
+multi plan ()           is export {} # no plan, by default
+sub done-testing()      is export { @Testers[0].done-testing }
+
+sub ok (Mu $cond, $desc = '') is export {
+    @Testers[0].test: ?$cond, :$desc;
+}
+
+sub nok (Mu $cond, $desc = '') is export {
+    @Testers[0].test: !$cond, :$desc;
+}
+
+class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
     has int $.tests-run = 0;
     has     $.planned   = *;
-    has Bool $.no-plan = True;
-    has $!out = $PROCESS::OUT;
-    has $!err = $PROCESS::ERR;
+    has Bool $.no-plan is rw = True;
+    has $!out  = $PROCESS::OUT;
+    has $!todo = $PROCESS::OUT;
+    has $!err  = $PROCESS::ERR;
 
-    method plan ($!planned) { $.no-plan = False; }
+    method plan ($!planned) {
+        $.no-plan = False;
+        $!out.say: "1..$!planned";
+    }
 
     method done-testing {
         $!out.say: "1..$!tests-run" if $!no-plan;
     }
 
-    method test ($cond, $desc is copy) {
+    method cleanup {
+        # Wrong quantity of tests
+        not $!no-plan
+            and $!planned != $!tests-run
+            and self!diag: "Looks like you planned $!planned test{
+                    's' unless $!planned == 1
+                }, but ran $!tests-run";
+
+        $!failed
+            and self!diag: "Looks like you failed $!failed test{
+                's' unless $!failed == 1
+            } of $!tests-run";
+
+        # Clean up and exit
+        .?close unless $_ === $*OUT | $*ERR for $!out, $!err, $!todo;
+
+        exit $!failed min 254 if $!failed;
+        exit 255 if not $!no-plan and $!planned != $!tests-run;
+    }
+
+    method test (
+        $cond = True, :&success, :&failure, :$desc is copy = ''
+    ) {
         $desc .= subst: :g, '#', '\\#'; # escape '#'
         $!tests-run++;
         my $tap;
@@ -28,28 +69,23 @@ $Tester = .new given class {
         $!out.say: $tap;
 
         unless $cond {
-            my $caller = callframe 2;
-            # sub proclaim is not called directly, so 2 is minimum level
-            # my int $level = 2;
-            #repeat until !$?FILE.ends-with($caller.file) {
-            #    $caller = callframe($level++);
-            #}
-
-            self!diag: "\nFailed test {"'$desc'\n" if $desc} at {$caller.file} line {$caller.line}";
+            my $caller = callframe 3;
+            self!diag: "\nFailed test {
+                            "'$desc'\n" if $desc
+                        }at {$caller.file} line {$caller.line}";
         }
 
         $cond
     }
-    method !diag (Str() $message, :$err!) {
-        $!err.say: $message.subst: :g, rx/^^/, '# ';
+    method !diag (Str() $message) {
+        $!err.say: $message.subst(:g, rx/^^/, '# ')
+                           .subst(:g, rx/^^'#' \s+ $$/, '');
     }
     method diag (Str() $message) {
-        $!out.say: $message.subst: :g, rx/^^/, '# ';
+        $!out.say: $message.subst(:g, rx/^^/, '# ')
+                           .subst(:g, rx/^^'#' \s+ $$/, '');
     }
 }
-
-multi plan (Int $n) is export { $Tester.plan: $n; }
-multi plan ($n?)    is export {} # no plan, by default
 
 # sub done-testing () is export { $Tester.done-testing; }
 # sub plan ($n) is export { $Tester.plan: $n }
@@ -125,7 +161,7 @@ multi plan ($n?)    is export {} # no plan, by default
 * Die on failures
 * Alter output handler
 
-Routines in category: `plan`, `done-testing`, `skip`, `skip-rest`, `output`,
+Routines in category: ✓`plan`, `done-testing`, `skip`, `skip-rest`, `output`,
 `failure-output`, `todo-output`
 
 Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
@@ -143,7 +179,8 @@ Routines in category: `todo`, `subtest`
     - Do X on True
     - Do Y on False
 
-Routines in category: `pass`, `ok`, `nok`, `is`, `isnt`, `cmp-ok`, `is-approx`,
+Routines in category: `pass`, ✓`ok`, ✓`nok`, `is`, `isnt`, `cmp-ok`,
+`is-approx`,
 `flunk`, `isa-ok`, `does-ok`, `can-ok`, `like`, `unlike`, `use-ok`, `dies-ok`,
 `lives-ok`, `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
 

@@ -1,0 +1,2 @@
+#!/bin/bash
+colordiff -au <(prove -e './perl6 -Ilib -MOldTest' -vlr test.t 2>&1) <(prove -e './perl6 -Ilib -MTest' -vlr test.t 2>&1)
