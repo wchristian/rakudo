@@ -103,7 +103,82 @@ multi plan ($n?)    is export {} # no plan, by default
 
 =finish
 
-Goals:
+## Goals:
 
 * Remove code spaghettification
+* Remove duplicate logic
 * Avoid having a whole bunch of global variables
+* Try to improve performance
+* ???
+* Profit!
+
+-----------------------------------------------------
+
+## Routine Categories
+
+### Control Routines
+
+* Plan number of tests
+* Indicate we're done testing
+* Skip X amount of tests
+* Bail out of the test suite
+* Die on failures
+* Alter output handler
+
+Routines in category: `plan`, `done-testing`, `skip`, `skip-rest`, `output`,
+`failure-output`, `todo-output`
+
+Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
+
+### Grouping Routines
+
+* Mark next X amount of tests as TODO
+* Group X amount of tests as a separate mini-test-suite
+
+Routines in category: `todo`, `subtest`
+
+### Testing Routines
+
+* Take operation that produces True/False and input
+    - Do X on True
+    - Do Y on False
+
+Routines in category: `pass`, `ok`, `nok`, `is`, `isnt`, `cmp-ok`, `is-approx`,
+`flunk`, `isa-ok`, `does-ok`, `can-ok`, `like`, `unlike`, `use-ok`, `dies-ok`,
+`lives-ok`, `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
+
+### Auxiliary Routines
+
+* Display arbitrary messages requested by test author
+
+Routines in category: `diag`
+
+-----------------------------------------------------
+
+## Structure
+
+The module uses a `Tester` class that keeps state as well as provides
+a single pass/fail testing interface on which all other test routines rely on.
+Only one instance of `Tester` exists per test *level*, which means a
+`subtest` invocation creates its own instance, with its own state.
+
+### State
+
+State is stored in `Tester` class that is set during object's instantiation
+and can be altered by the routines in the **Control Routines** category.
+
+The object is pushed into a module-wide array that functions as a stack of
+Tester classes, each handling subtests. A subtest entry pushes a new Tester
+object onto the stack and exit from subtest pops one off.
+
+### Testing
+
+*speculative section; needs trial implementanions and benching*
+
+Each of the routines in **Testing Routines** will invoke `Tester`'s single
+test subroutine by telling it the operation to perform and what to do on
+True/False.
+
+The test routine will handle marking the test as TODO, correctly directing
+the output, dying on failures, and emitting proper TAP output, depending on
+the outcome of the provided test operation.
