@@ -7,6 +7,7 @@ class Tester { ... }
 my @Testers = Tester.new;
 END @Testers[0].cleanup;
 
+sub MONKEY-SEE-NO-EVAL() is export { 1 }
 sub diag (Mu $message) is export {
     @Testers[0].diag: $message.Str, :stderr;
 }
