@@ -27,4 +27,10 @@ cmp-ok $Instance, &[===], $Class;
 cmp-ok $Class, &[===], $Instance, 'just a test';
 cmp-ok $Class, &[===], $Instance;
 
+is_approx 1e-7, 1e-6, 'just a test';
+is_approx 1e-7, 1e-6;
+is_approx 5, 6, 'just a test';
+is_approx 5, 6;
+
+
 done-testing;

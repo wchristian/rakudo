@@ -109,4 +109,44 @@ cmp-ok $Instance, &[===], $Instance;
 cmp-ok $Class, &[===], $Class, 'just a test';
 cmp-ok $Class, &[===], $Class;
 
+is-approx 5, 5-.5e-5, 'just a test';
+is-approx 5, 5-.5e-5;
+is-approx 5, 5-1.5e-5, 'just a test';
+is-approx 5, 5-1.5e-5;
+
+is-approx 1, 2, 1, 'just a test';
+is-approx 1, 2, 1;
+is-approx 1, 3, 1, 'just a test';
+is-approx 1, 3, 1;
+
+is-approx 1, 2,  :rel-tol<.5>, 'just a test';
+is-approx 1, 2,  :rel-tol<.5>;
+is-approx 1, 20, :rel-tol<.5>, 'just a test';
+is-approx 1, 20, :rel-tol<.5>;
+
+is-approx 1, 2, :abs-tol<1>, 'just a test';
+is-approx 1, 2, :abs-tol<1>;
+is-approx 1, 3, :abs-tol<1>, 'just a test';
+is-approx 1, 3, :abs-tol<1>;
+
+is-approx 1e0, 1e1, :abs-tol<9>,    :rel-tol<.9>;
+is-approx 1e2, 1e3, :abs-tol<900>,  :rel-tol<.9>;
+is-approx 1e3, 1e5, :abs-tol<99e3>, :rel-tol<.99>;
+is-approx   1, 1.5, :abs-tol<1>,    :rel-tol<.4>;
+is-approx 1e0, 1e1, :abs-tol<9>,    :rel-tol<.9>,  'test desc one';
+is-approx 1e2, 1e3, :abs-tol<900>,  :rel-tol<.9>,  'test desc two';
+is-approx 1e3, 1e5, :abs-tol<99e3>, :rel-tol<.99>, 'test desc three';
+is-approx   1, 1.5, :abs-tol<1>,    :rel-tol<.4>,  'test desc four';
+is-approx 1, 10, :abs-tol<5>,  :rel-tol<.9>;
+is-approx 1, 10, :abs-tol<90>, :rel-tol<.5>;
+is-approx 1, 10, :abs-tol<5>,  :rel-tol<.5>;
+is-approx 1, 10, :abs-tol<5>,  :rel-tol<.9>, 'test desc five';
+is-approx 1, 10, :abs-tol<90>, :rel-tol<.5>, 'test desc six';
+is-approx 1, 10, :abs-tol<5>, :rel-tol<.5>, 'test desc seven';
+
+is_approx 1e-7, 1.1e-7, 'just a test';
+is_approx 1e-7, 1.1e-7;
+is_approx 5, 5-1e-6, 'just a test';
+is_approx 5, 5-1e-6;
+
 done-testing;

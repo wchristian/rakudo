@@ -80,6 +80,68 @@ multi sub cmp-ok(Mu $got, $op, Mu $expected, $desc = '') is export {
     }, :$desc;
 }
 
+multi sub is_approx(Mu $got, Mu $expected, $desc = '') is export {
+    DEPRECATED('is-approx'); # Remove at 20161217 release (6 months from today)
+
+    my $tol = $expected.abs < 1e-6 ?? 1e-5 !! $expected.abs * 1e-6;
+    @Testers[0].test: ($got - $expected).abs <= $tol,
+        :failure{ exgo $expected, $got }, :$desc;
+}
+multi sub is-approx(Numeric $got, Numeric $expected, $desc = '') is export {
+    is-approx-calculate($got, $expected, 1e-5, Nil, $desc);
+}
+multi sub is-approx(
+    Numeric $got, Numeric $expected, Numeric $abs-tol, $desc = ''
+) is export {
+    is-approx-calculate($got, $expected, $abs-tol, Nil, $desc);
+}
+multi sub is-approx(
+    Numeric $got, Numeric $expected, $desc = '', Numeric :$rel-tol is required
+) is export {
+    is-approx-calculate($got, $expected, Nil, $rel-tol, $desc);
+}
+multi sub is-approx(
+    Numeric $got, Numeric $expected, $desc = '', Numeric :$abs-tol is required
+) is export {
+    is-approx-calculate($got, $expected, $abs-tol, Nil, $desc);
+}
+multi sub is-approx(
+    Numeric $got, Numeric $expected, $desc = '',
+    Numeric :$rel-tol is required, Numeric :$abs-tol is required
+) is export {
+    is-approx-calculate($got, $expected, $abs-tol, $rel-tol, $desc);
+}
+sub is-approx-calculate (
+    $got,
+    $expected,
+    $abs-tol where { !.defined or $_ >= 0 },
+    $rel-tol where { !.defined or $_ >= 0 },
+    $desc,
+) {
+    my Bool    ($abs-tol-ok, $rel-tol-ok) = True, True;
+    my Numeric ($abs-tol-got, $rel-tol-got);
+    if $abs-tol.defined {
+        $abs-tol-got = abs($got - $expected);
+        $abs-tol-ok = $abs-tol-got <= $abs-tol;
+    }
+    if $rel-tol.defined {
+        $rel-tol-got = abs($got - $expected) / max($got.abs, $expected.abs);
+        $rel-tol-ok = $rel-tol-got <= $rel-tol;
+    }
+
+    @Testers[0].test: :1extra-call-level, $abs-tol-ok && $rel-tol-ok, :failure{
+        join "\n",(
+              "maximum absolute tolerance: $abs-tol\n"
+            ~ "actual absolute difference: $abs-tol-got"
+                unless $abs-tol-ok
+        ), (
+              "maximum relative tolerance: $rel-tol\n"
+            ~ "actual relative difference: $rel-tol-got"
+                unless $rel-tol-ok
+        )
+    }, :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -120,7 +182,8 @@ class Tester {
     }
 
     method test (
-        $cond = True, :&failure, :$desc is copy = ''
+        $cond = True, :&failure, :$desc is copy = '',
+        :$extra-call-level = 0
     ) {
         $desc .= subst: :g, '#', '\\#'; # escape '#'
         $!tests-run++;
@@ -133,7 +196,7 @@ class Tester {
         $!out.say: $tap;
 
         unless $cond {
-            my $caller = callframe 3;
+            my $caller = callframe 3 + $extra-call-level;
             self!diag:
                 "\nFailed test $("'$desc'\n" if $desc)at $($caller.file) line "
                 ~ $caller.line ~ ("\n" ~ failure() if &failure);
@@ -249,7 +312,7 @@ Routines in category: `todo`, `subtest`
     - Do Y on False
 
 Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
-`is-approx`,
+✓`is-approx`,
 ✓`flunk`, `isa-ok`, `does-ok`, `can-ok`, `like`, `unlike`, `use-ok`, `dies-ok`,
 `lives-ok`, `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
 
