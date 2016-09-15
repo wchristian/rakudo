@@ -292,6 +292,13 @@ sub todo($desc, $count = 1) is export {
     @Testers[0].todo: "# TODO $desc.subst(:g, '#', '\\#')", $count;
 }
 
+sub skip-rest($desc = '<unknown>') is export {
+    with @Testers[0] {
+        die "A plan is required in order to use skip-rest" if .no-plan;
+        skip $desc, .planned - .tests-run;
+    }
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -417,7 +424,7 @@ sub exgo ($expected, $got) {
 * Die on failures
 * Alter output handler
 
-Routines in category: ✓`plan`, ✓`done-testing`, ✓`skip`, `skip-rest`,
+Routines in category: ✓`plan`, ✓`done-testing`, ✓`skip`, ✓`skip-rest`,
 `bailout`, `output`, `failure-output`, `todo-output`
 
 Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
