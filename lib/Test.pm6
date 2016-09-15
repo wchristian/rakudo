@@ -203,14 +203,12 @@ sub lives-ok(Callable $code, $desc = '') is export {
 }
 
 sub eval-dies-ok(Str $code, $desc = '') is export {
-    my $death = True;
-    try { EVAL $code; $death = False; }
-    @Testers[0].test: $death, :$desc;
+    my $error = eval-exception $code;
+    @Testers[0].test: $error.defined, :$desc;
 }
 
 sub eval-lives-ok(Str $code, $desc = '') is export {
-    try EVAL $code;
-    my $error = $!;
+    my $error = eval-exception $code;
     @Testers[0].test: !$error.defined, :failure{ "Error: $error" }, :$desc;
 }
 
@@ -402,6 +400,11 @@ class Tester {
 sub exgo ($expected, $got) {
       "expected: $expected\n"
     ~ "     got: $got"
+}
+
+sub eval-exception($code) {
+    try EVAL $code;
+    $!;
 }
 
 =finish
