@@ -4,33 +4,34 @@ use MONKEY-SEE-NO-EVAL;
 use MONKEY-GUTS;
 
 class Tester { ... }
-my @Testers = Tester.new: :die-if-fail(%*ENV<PERL6_TEST_DIE_ON_FAIL>);
-END @Testers[0].cleanup;
+my @Testers = my $Tester
+            = Tester.new: :die-if-fail(%*ENV<PERL6_TEST_DIE_ON_FAIL>);
+END $Tester.cleanup;
 
-our sub output         is rw { @Testers[0].out  }
-our sub failure_output is rw { @Testers[0].err  }
-our sub todo_output    is rw { @Testers[0].todo }
+our sub output         is rw { $Tester.out  }
+our sub failure_output is rw { $Tester.err  }
+our sub todo_output    is rw { $Tester.todo }
 
 sub MONKEY-SEE-NO-EVAL() is export { 1 }
-sub bail-out ($desc?) is export { @Testers[0].bail-out: $desc; }
+sub bail-out ($desc?) is export { $Tester.bail-out: $desc; }
 sub diag (Mu $message) is export {
-    @Testers[0].diag: $message.Str, :stderr;
+    $Tester.diag: $message.Str, :stderr;
 }
-multi plan (Cool $n)    is export { @Testers[0].plan: $n; }
+multi plan (Int \n)    is export { $Tester.plan: n; }
 multi plan (Whatever $) is export {} # no plan, by default
 multi plan ()           is export {} # no plan, by default
-sub done-testing()      is export { @Testers[0].done-testing }
+sub done-testing()      is export { $Tester.done-testing }
 
-sub pass  ($desc = '')         is export { @Testers[0].test: True,   :$desc; }
-sub flunk ($desc = '')         is export { @Testers[0].test: False,  :$desc; }
-sub ok  (Mu $cond, $desc = '') is export { @Testers[0].test: ?$cond, :$desc; }
-sub nok (Mu $cond, $desc = '') is export { @Testers[0].test: !$cond, :$desc; }
+sub pass  (\desc = '')         is export { $Tester.test: True,  :desc(desc); }
+sub flunk (\desc = '')         is export { $Tester.test: False, :desc(desc); }
+sub ok  (Mu \cond, \desc = '') is export { $Tester.test: ?cond, :desc(desc); }
+sub nok (Mu \cond, \desc = '') is export { $Tester.test: !cond, :desc(desc); }
 
-multi sub is(Mu $got, Mu:U $expected, $desc = '') is export {
-    @Testers[0].test: (not $got.defined and $got === $expected), :failure{
-        exgo "($expected.perl())",
-            $got.defined ?? "'$got.perl()'" !! "($got.^name())";
-    }, :$desc;
+multi sub is(Mu \got, Mu:U \expected, \desc = '') is export {
+    $Tester.test: (not got.defined and got === expected), :failure{
+        exgo "($(expected.perl))",
+            got.defined ?? "'$(got.perl)'" !! "($(got.^name))";
+    }, :desc(desc);
 }
 multi sub is(Mu $got, Mu:D $expected, $desc = '') is export {
     my $test;
@@ -49,23 +50,23 @@ multi sub is(Mu $got, Mu:D $expected, $desc = '') is export {
     else {
         $failure = { exgo "'$expected'", "($got.^name())" };
     }
-    @Testers[0].test: ?$test, |(:$failure if $failure), :$desc;
+    $Tester.test: ?$test, |(:$failure if $failure), :$desc;
 }
 
 multi sub isnt(Mu $got, Mu:U $expected, $desc = '') is export {
-    @Testers[0].test: ($got.defined or $got !=== $expected),
+    $Tester.test: ($got.defined or $got !=== $expected),
         :failure{ exgo "anything except '$expected.perl()'", "'$got.perl()'" },
         :$desc;
 }
 multi sub isnt(Mu $got, Mu:D $expected, $desc = '') is export {
-    @Testers[0].test: (not $got.defined or $got ne $expected),
+    $Tester.test: (not $got.defined or $got ne $expected),
         :failure{ exgo "anything except '$expected.perl()'", "'$got.perl()'" },
         :$desc;
 }
 
 multi sub cmp-ok(Mu $got, Callable:D $op, Mu $expected, $desc = '') is export {
     $got.defined; # mark Failures as handled
-    @Testers[0].test: ?$op($got,$expected), :failure{
+    $Tester.test: ?$op($got,$expected), :failure{
           "expected: '{$expected // $expected.^name}'\n"
         ~ " matcher: '{$op.?name || $op.^name}'\n"
         ~ "     got: '$got'"
@@ -82,11 +83,11 @@ multi sub cmp-ok(Mu $got, $op, Mu $expected, $desc = '') is export {
             =  &CALLERS::("infix:<$op>") #1
             // &CALLERS::("infix:«$op»") #2
             // &CALLERS::("infix:<$op.subst(/<?before <[<>]>>/, "\\", :g)>") #3
-            // return @Testers[0].test: False, :failure{
+            // return $Tester.test: False, :failure{
                 "Could not use '$op.perl()' as a comparator."
             }, :$desc;
 
-    @Testers[0].test: ?$matcher($got,$expected), :failure{
+    $Tester.test: ?$matcher($got,$expected), :failure{
           "expected: '{$expected // $expected.^name}'\n"
         ~ " matcher: '{$matcher.?name || $matcher.^name}'\n"
         ~ "     got: '$got'"
@@ -97,7 +98,7 @@ multi sub is_approx(Mu $got, Mu $expected, $desc = '') is export {
     DEPRECATED('is-approx'); # Remove at 20161217 release (6 months from today)
 
     my $tol = $expected.abs < 1e-6 ?? 1e-5 !! $expected.abs * 1e-6;
-    @Testers[0].test: ($got - $expected).abs <= $tol,
+    $Tester.test: ($got - $expected).abs <= $tol,
         :failure{ exgo $expected, $got }, :$desc;
 }
 multi sub is-approx(Numeric $got, Numeric $expected, $desc = '') is export {
@@ -142,7 +143,7 @@ sub is-approx-calculate (
         $rel-tol-ok = $rel-tol-got <= $rel-tol;
     }
 
-    @Testers[0].test: :1extra-call-level, $abs-tol-ok && $rel-tol-ok, :failure{
+    $Tester.test: :1extra-call-level, $abs-tol-ok && $rel-tol-ok, :failure{
         join "\n",(
               "maximum absolute tolerance: $abs-tol\n"
             ~ "actual absolute difference: $abs-tol-got"
@@ -158,14 +159,14 @@ sub is-approx-calculate (
 sub isa-ok(
     Mu $var, Mu $type, $desc = "The object is-a '$type.perl()'"
 ) is export {
-    @Testers[0].test: $var.isa($type),
+    $Tester.test: $var.isa($type),
         :failure{ "Actual type: $var.^name()" }, :$desc;
 }
 
 sub does-ok(
     Mu $var, Mu $type, $desc = "The object does role '$type.perl()'"
 ) is export {
-    @Testers[0].test: $var.does($type),
+    $Tester.test: $var.does($type),
         :failure{ "Type: $var.^name() doesn't do role $type.perl()" }, :$desc;
 }
 
@@ -176,49 +177,49 @@ sub can-ok(
         ~ " '$var.WHAT.perl()' can do the method '$meth'"
     )
 ) is export {
-    @Testers[0].test: $var.^can($meth), :$desc;
+    $Tester.test: $var.^can($meth), :$desc;
 }
 
 sub like(Str $got, Regex $expected, $desc = '') is export {
-    @Testers[0].test: $got ~~ $expected,
+    $Tester.test: $got ~~ $expected,
         :failure{ exgo "'$expected.perl()'", "'$got'" }, :$desc;
 }
 
 sub unlike(Str $got, Regex $expected, $desc = '') is export {
-    @Testers[0].test: !($got ~~ $expected),
+    $Tester.test: !($got ~~ $expected),
         :failure{ exgo "'$expected.perl()'", "'$got'" }, :$desc;
 }
 
 sub use-ok(Str $module, $desc = "The module can be use-d ok") is export {
     try EVAL "use $module";
     my $error = $!;
-    @Testers[0].test: !$error.defined, :failure{ $error }, :$desc;
+    $Tester.test: !$error.defined, :failure{ $error }, :$desc;
 }
 
 sub dies-ok(Callable $code, $desc = '') is export {
     my $death = 1;
     try { $code(); $death = 0; }
-    @Testers[0].test: $death, :$desc;
+    $Tester.test: $death, :$desc;
 }
 
 sub lives-ok(Callable $code, $desc = '') is export {
     try $code();
     my $error = $!;
-    @Testers[0].test: !$error.defined, :failure{ $error }, :$desc;
+    $Tester.test: !$error.defined, :failure{ $error }, :$desc;
 }
 
 sub eval-dies-ok(Str $code, $desc = '') is export {
     my $error = eval-exception $code;
-    @Testers[0].test: $error.defined, :$desc;
+    $Tester.test: $error.defined, :$desc;
 }
 
 sub eval-lives-ok(Str $code, $desc = '') is export {
     my $error = eval-exception $code;
-    @Testers[0].test: !$error.defined, :failure{ "Error: $error" }, :$desc;
+    $Tester.test: !$error.defined, :failure{ "Error: $error" }, :$desc;
 }
 
 sub is-deeply(Mu $got, Mu $expected, $desc = '') is export {
-    @Testers[0].test: $got eqv $expected,
+    $Tester.test: $got eqv $expected,
         :failure{ exgo $got.perl, $expected.perl }, :$desc;
 }
 
@@ -229,21 +230,23 @@ multi sub subtest(&tests, $desc = '') is export {
         :indent(.indent ~ '    ')
         :die-if-fail(.die-if-fail and not .todo-num)
         :in-subtest
-    given @Testers[0];
+    given $Tester;
 
     @Testers.unshift: $new-t;
+    $Tester = $new-t;
     tests;
     $new-t.done-testing;
     @Testers.shift;
-    @Testers[0].test: $new-t.is-success, :$desc;
+    $Tester = @Testers[0];
+    $Tester.test: $new-t.is-success, :$desc;
 }
 
 multi sub skip() {
-    @Testers[0].test: True, :desc("# SKIP");
+    $Tester.test: True, :desc("# SKIP");
 }
 multi sub skip($desc, Numeric $count = 1) is export {
     for ^$count {
-        @Testers[0].test: True, :desc("# SKIP $desc");
+        $Tester.test: True, :desc("# SKIP $desc");
     }
 }
 multi sub skip($desc, $count) is export {
@@ -275,7 +278,7 @@ sub throws-like(
                 pass $msg // '';
                 my $got-type = $_;
                 my $type-ok = $got-type ~~ $ex-type;
-                @Testers[0].test: $type-ok, :failure{
+                $Tester.test: $type-ok, :failure{
                       "Expected: $ex-type.^name()\n"
                     ~ "Got:      $got-type.^name()\n"
                     ~ "Exception message: $got-type.message()"
@@ -284,7 +287,7 @@ sub throws-like(
                 if $type-ok {
                     for %matcher.kv -> $k, $v {
                         my $got is default(Nil) = $got-type."$k"();
-                        @Testers[0].test: $got ~~ $v, :failure{
+                        $Tester.test: $got ~~ $v, :failure{
                               "Expected: $($v ~~ Str ?? $v !! $v.perl)\n"
                             ~ "Got:      $got";
                         }, :desc(".$k matches $v.gist()");
@@ -298,11 +301,11 @@ sub throws-like(
 }
 
 sub todo($desc, $count = 1) is export {
-    @Testers[0].todo: "# TODO $desc.subst(:g, '#', '\\#')", $count;
+    $Tester.todo: "# TODO $desc.subst(:g, '#', '\\#')", $count;
 }
 
 sub skip-rest($desc = '<unknown>') is export {
-    with @Testers[0] {
+    with $Tester {
         die "A plan is required in order to use skip-rest" if .no-plan;
         skip $desc, .planned - .tests-run;
     }
@@ -412,25 +415,18 @@ class Tester {
 
     method todo ($!todo-reason, $!todo-num, --> Nil) {}
 
-    multi method diag (Str() $message, :$stderr!) {
-        $!err.say: $!indent ~ $message.subst(:g, rx/^^/, '# ')
-                           .subst(:g, rx/^^'#' \s+ $$/, '');
+    multi method diag (Str $message, :$stderr!) {
+        $!err.say: $!indent ~ "# $message".subst(:g, "\n", "\n# ")
+                                          .subst(:g, rx/^^'#' \s+ $$/, '');
     }
-    multi method diag (Str() $message) {
-        $!out.say: $!indent ~ $message.subst(:g, rx/^^/, '# ')
-                           .subst(:g, rx/^^'#' \s+ $$/, '');
+    multi method diag (Str $message) {
+        $!out.say: $!indent ~ "# $message".subst(:g, "\n", "\n# ")
+                                          .subst(:g, rx/^^'#' \s+ $$/, '');
     }
 }
 
-sub exgo ($expected, $got) {
-      "expected: $expected\n"
-    ~ "     got: $got"
-}
-
-sub eval-exception($code) {
-    try EVAL $code;
-    $!;
-}
+sub exgo ($expected, $got) { "expected: $expected\n     got: $got" }
+sub eval-exception($code) { try EVAL $code; $! }
 
 =finish
 
