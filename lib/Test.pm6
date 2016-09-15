@@ -8,12 +8,22 @@ multi plan (Whatever $) is export {} # no plan, by default
 multi plan ()           is export {} # no plan, by default
 sub done-testing()      is export { @Testers[0].done-testing }
 
-sub ok (Mu $cond, $desc = '') is export {
-    @Testers[0].test: ?$cond, :$desc;
-}
+sub pass  ($desc = '')         is export { @Testers[0].test: True,   :$desc; }
+sub flunk ($desc = '')         is export { @Testers[0].test: False,  :$desc; }
+sub ok  (Mu $cond, $desc = '') is export { @Testers[0].test: ?$cond, :$desc; }
+sub nok (Mu $cond, $desc = '') is export { @Testers[0].test: !$cond, :$desc; }
 
-sub nok (Mu $cond, $desc = '') is export {
-    @Testers[0].test: !$cond, :$desc;
+multi sub is(Mu $got, Mu:U $expected, $desc = '') is export {
+    @Testers[0].test: (not $got.defined and $got === $expected), :failure{
+          "expected: ($expected.perl())\n"
+        ~ "     got: '$got.perl()'"
+    }, :$desc;
+}
+multi sub is(Mu $got, Mu:D $expected, $desc = '') is export {
+    @Testers[0].test: ($got.defined and $got eq $expected), :failure{
+          "expected: '$expected.perl()'\n"
+        ~ "     got: ($got.perl())"
+    }, :$desc;
 }
 
 class Tester {
@@ -56,7 +66,7 @@ class Tester {
     }
 
     method test (
-        $cond = True, :&success, :&failure, :$desc is copy = ''
+        $cond = True, :&failure, :$desc is copy = ''
     ) {
         $desc .= subst: :g, '#', '\\#'; # escape '#'
         $!tests-run++;
@@ -70,9 +80,9 @@ class Tester {
 
         unless $cond {
             my $caller = callframe 3;
-            self!diag: "\nFailed test {
-                            "'$desc'\n" if $desc
-                        }at {$caller.file} line {$caller.line}";
+            self!diag:
+                "\nFailed test $("'$desc'\n" if $desc)at $($caller.file) line "
+                ~ $caller.line ~ ("\n" ~ failure() if &failure);
         }
 
         $cond
