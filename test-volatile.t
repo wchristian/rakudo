@@ -49,4 +49,7 @@ does-ok $Foo but role {}, FooRole;
 can-ok $Instance, 'foo';
 can-ok $Class, 'foo';
 
+like 'foo', /bar/, 'just a test';
+like 'foo', /bar/;
+
 done-testing;

@@ -166,4 +166,7 @@ can-ok Foo, 'foo';
 can-ok $Instance, 'foo', 'just a test';
 can-ok $Class, 'foo', 'just a test';
 
+like 'foo', /foo/, 'just a test';
+like 'foo', /foo/;
+
 done-testing;

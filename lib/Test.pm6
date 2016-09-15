@@ -166,6 +166,11 @@ sub can-ok(
     @Testers[0].test: $var.^can($meth), :$desc;
 }
 
+sub like(Str $got, Regex $expected, $desc = '') is export {
+    @Testers[0].test: $got ~~ $expected,
+        :failure{ exgo "'$expected.perl()'", "'$got'" }, :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -336,7 +341,7 @@ Routines in category: `todo`, `subtest`
     - Do Y on False
 
 Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
-✓`is-approx`, ✓`flunk`, ✓`isa-ok`, ✓`does-ok`, ✓`can-ok`, `like`,
+✓`is-approx`, ✓`flunk`, ✓`isa-ok`, ✓`does-ok`, ✓`can-ok`, ✓`like`,
 `unlike`, `use-ok`, `dies-ok`, `lives-ok`,
 `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
 
@@ -375,3 +380,11 @@ True/False.
 The test routine will handle marking the test as TODO, correctly directing
 the output, dying on failures, and emitting proper TAP output, depending on
 the outcome of the provided test operation.
+
+-----------------------------------------------------------
+
+Issues in the old Test.pm6 found during refactoring:
+
+* like (Failure, Regex) and unlike (Failure, Regex) candidates do not exist,
+despite existing candidates having logic to handle failures (they won't ever
+get there)
