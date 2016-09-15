@@ -230,4 +230,12 @@ throws-like { X::AdHoc.new.throw }, X::AdHoc, 'just a test',
 throws-like ｢ X::AdHoc.new.throw ｣, X::AdHoc, 'just a test',
     payload => ｢Unexplained error｣;
 
+todo 'testing';
+ok 0, 'just a test';
+ok 1, 'just a test';
+todo 'testing again', 2;
+ok 0;
+ok 0;
+ok 1;
+
 done-testing;

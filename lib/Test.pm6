@@ -285,6 +285,10 @@ sub throws-like(
     }, $desc;
 }
 
+sub todo($desc, $count = 1) is export {
+    @Testers[0].todo: "# TODO $desc.subst(:g, '#', '\\#')", $count;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -293,6 +297,8 @@ class Tester {
     has Bool $.in-subtest = False;
     has Bool $.no-plan is rw = True;
     has Str $.indent = '';
+    has Str $!todo-reason = '';
+    has Int $!todo-num = 0;
 
     has Bool $!done = False;
     has $!out  = $PROCESS::OUT;
@@ -317,12 +323,12 @@ class Tester {
         # Wrong quantity of tests
         not $!no-plan
             and $!planned != $!tests-run
-            and self!diag: "Looks like you planned $!planned test{
+            and self.diag: :stderr, "Looks like you planned $!planned test{
                     's' unless $!planned == 1
                 }, but ran $!tests-run";
 
         $!failed
-            and self!diag: "Looks like you failed $!failed test{
+            and self.diag: :stderr, "Looks like you failed $!failed test{
                 's' unless $!failed == 1
             } of $!tests-run";
     }
@@ -345,9 +351,12 @@ class Tester {
         my $tap;
         unless $cond {
             $tap ~= "not ";
-            $!failed++;
+            $!failed++ unless $!todo-num;
         }
-        $tap ~= "ok $!tests-run - $desc";
+        my $is-todo = False;
+        $tap ~= "ok $!tests-run - $desc$(
+                if $!todo-num { $!todo-num--; $is-todo = True; $!todo-reason }
+            )";
         $!out.say: $!indent ~ $tap;
 
         unless $cond {
@@ -356,18 +365,21 @@ class Tester {
             repeat until !$?FILE.ends-with($caller.file) {
                 $caller = callframe(++$level);
             }
-            self!diag:
+            self.diag: |(:stderr unless $is-todo),
                 "\nFailed test $("'$desc'\n" if $desc)at $($caller.file) line "
                 ~ $caller.line ~ ("\n" ~ failure() if &failure);
         }
 
         $cond
     }
-    method !diag (Str() $message) {
+
+    method todo ($!todo-reason, $!todo-num, --> Nil) {}
+
+    multi method diag (Str() $message, :$stderr!) {
         $!err.say: $!indent ~ $message.subst(:g, rx/^^/, '# ')
                            .subst(:g, rx/^^'#' \s+ $$/, '');
     }
-    method diag (Str() $message) {
+    multi method diag (Str() $message) {
         $!out.say: $!indent ~ $message.subst(:g, rx/^^/, '# ')
                            .subst(:g, rx/^^'#' \s+ $$/, '');
     }
@@ -462,7 +474,7 @@ Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
 * Mark next X amount of tests as TODO
 * Group X amount of tests as a separate mini-test-suite
 
-Routines in category: `todo`, ✓`subtest`
+Routines in category: ✓`todo`, ✓`subtest`
 
 ### Testing Routines
 
@@ -537,3 +549,15 @@ non-numeric number of tests.  Did you get the arguments backwards?" if $count
 * throws-like has incosistent "code died/dies" message on failure to die;
 as well as capitalization of Expected/Got messages. Different indent
 for the expected got messages. Also, Test.pm6 is referenced in failures
+
+* todo() does not have the same API as skip() [check count is numeric; let
+omit description]
+
+* Test whether we actually need to escape hashmarks in TODO reasons
+
+-------------------------------------
+
+TODO:
+
+Refactor diag()
+Add --> Nil to all routines that matter
