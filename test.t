@@ -169,4 +169,7 @@ can-ok $Class, 'foo', 'just a test';
 like 'foo', /foo/, 'just a test';
 like 'foo', /foo/;
 
+unlike 'foo', /bar/, 'just a test';
+unlike 'foo', /bar/;
+
 done-testing;

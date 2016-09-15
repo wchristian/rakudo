@@ -171,6 +171,11 @@ sub like(Str $got, Regex $expected, $desc = '') is export {
         :failure{ exgo "'$expected.perl()'", "'$got'" }, :$desc;
 }
 
+sub unlike(Str $got, Regex $expected, $desc = '') is export {
+    @Testers[0].test: !($got ~~ $expected),
+        :failure{ exgo "'$expected.perl()'", "'$got'" }, :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -342,7 +347,7 @@ Routines in category: `todo`, `subtest`
 
 Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
 ✓`is-approx`, ✓`flunk`, ✓`isa-ok`, ✓`does-ok`, ✓`can-ok`, ✓`like`,
-`unlike`, `use-ok`, `dies-ok`, `lives-ok`,
+✓`unlike`, `use-ok`, `dies-ok`, `lives-ok`,
 `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
 
 ### Auxiliary Routines
@@ -388,3 +393,8 @@ Issues in the old Test.pm6 found during refactoring:
 * like (Failure, Regex) and unlike (Failure, Regex) candidates do not exist,
 despite existing candidates having logic to handle failures (they won't ever
 get there)
+
+* unlike() generates confusing diag() message one failure:
+<TestNinja> m: use Test; unlike 'foo', /foo/
+<camelia> rakudo-moar 2c95f7: OUTPUT«not ok 1 - ␤␤# Failed test at <tmp>
+    line 1␤#      expected: '/foo/'␤#      got: 'foo'␤»
