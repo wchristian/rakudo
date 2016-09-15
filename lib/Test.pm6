@@ -4,7 +4,7 @@ use MONKEY-SEE-NO-EVAL;
 use MONKEY-GUTS;
 
 class Tester { ... }
-my @Testers = Tester.new;
+my @Testers = Tester.new: :die-if-fail(%*ENV<PERL6_TEST_DIE_ON_FAIL>);
 END @Testers[0].cleanup;
 
 sub MONKEY-SEE-NO-EVAL() is export { 1 }
@@ -222,8 +222,10 @@ multi sub subtest(Pair $in)           is export { subtest $in.value, $in.key }
 multi sub subtest($desc, &tests)      is export { subtest &tests,    $desc   }
 multi sub subtest(&tests, $desc = '') is export {
     my $new-t = Tester.new:
-        :indent(@Testers[0].indent ~ '    ')
-        :in-subtest;
+        :indent(.indent ~ '    ')
+        :die-if-fail(.die-if-fail and not .todo-num)
+        :in-subtest
+    given @Testers[0];
 
     @Testers.unshift: $new-t;
     tests;
@@ -308,10 +310,12 @@ class Tester {
     has int $.tests-run = 0;
     has     $.planned   = *;
     has Bool $.in-subtest = False;
+    has Bool $!cleaned-up = False;
     has Bool $.no-plan is rw = True;
+    has $.die-if-fail = False;
     has Str $.indent = '';
     has Str $!todo-reason = '';
-    has Int $!todo-num = 0;
+    has Int $.todo-num = 0;
 
     has Bool $!done = False;
     has $!out  = $PROCESS::OUT;
@@ -353,6 +357,7 @@ class Tester {
     }
 
     method cleanup {
+        return if $!cleaned-up;
         self.done-testing: :automated;
         # Clean up and exit
         .?close unless $_ === $*OUT | $*ERR or $!in-subtest
@@ -387,9 +392,18 @@ class Tester {
             self.diag: |(:stderr unless $is-todo),
                 "\nFailed test $("'$desc'\n" if $desc)at $($caller.file) line "
                 ~ $caller.line ~ ("\n" ~ failure() if &failure);
+
+            $!die-if-fail and not $is-todo and self!die-on-fail;
         }
 
         $cond
+    }
+
+    method !die-on-fail {
+        self.diag: :stderr, 'Test failed. Stopping test suite, because'
+                ~ ' PERL6_TEST_DIE_ON_FAIL environmental variable is set'
+                ~ ' to a true value.';
+        exit 255;
     }
 
     method todo ($!todo-reason, $!todo-num, --> Nil) {}
@@ -441,7 +455,7 @@ sub eval-exception($code) {
 Routines in category: ✓`plan`, ✓`done-testing`, ✓`skip`, ✓`skip-rest`,
 ✓`bail-out`, `output`, `failure-output`, `todo-output`
 
-Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
+Env vars in category: ✓`PERL6_TEST_DIE_ON_FAIL`
 
 ### Grouping Routines
 
