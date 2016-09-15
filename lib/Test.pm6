@@ -308,10 +308,11 @@ class Tester {
         $!out.say: $!indent ~ "1..$!planned";
     }
 
-    method done-testing {
+    method done-testing (:$automated){
         return if $!done;
         $!done = True;
-        $!out.say: $!indent ~ "1..$!tests-run" if $!no-plan;
+        $!out.say: $!indent ~ "1..$!tests-run"
+            if $!no-plan and not $automated;
 
         # Wrong quantity of tests
         not $!no-plan
@@ -327,7 +328,7 @@ class Tester {
     }
 
     method cleanup {
-        self.done-testing;
+        self.done-testing: :automated;
         # Clean up and exit
         .?close unless $_ === $*OUT | $*ERR or $!in-subtest
             for $!out, $!err, $!todo;
