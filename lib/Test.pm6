@@ -393,56 +393,6 @@ sub exgo ($expected, $got) {
     ~ "     got: $got"
 }
 
-# sub done-testing () is export { $Tester.done-testing; }
-# sub plan ($n) is export { $Tester.plan: $n }
-# sub pass ($desc = '') is export { $Tester.pass: $desc }
-# sub ok (Mu $cond, $desc = '') is export { $Tester.test: ?$cond, $desc; }
-# sub nok (Mu $cond, $desc = '') is export { $Tester.test: !$cond, $desc; }
-# sub is (Mu $got, Mu:U $expected, $desc = '') is export {
-#     $Tester.is: !$cond, $desc;
-# multi sub is(Mu $got, Mu:D $expected, $desc = '') is export {
-# multi sub isnt(Mu $got, Mu:U $expected, $desc = '') is export {
-# multi sub isnt(Mu $got, Mu:D $expected, $desc = '') is export {
-# multi sub cmp-ok(Mu $got, $op, Mu $expected, $desc = '') is export {
-# sub bail-out ($desc?) is export {
-# multi sub is_approx(Mu $got, Mu $expected, $desc = '') is export {
-# multi sub is-approx(Numeric $got, Numeric $expected, $desc = '') is export {
-# multi sub is-approx(
-# multi sub is-approx(
-# multi sub is-approx(
-# multi sub is-approx(
-# sub is-approx-calculate (
-# multi sub todo($reason, $count = 1) is export {
-# multi sub skip() {
-# multi sub skip($reason, $count = 1) is export {
-# sub skip-rest($reason = '<unknown>') is export {
-# multi sub subtest(Pair $what)            is export { subtest($what.value,$what.key) }
-# multi sub subtest($desc, &subtests)      is export { subtest(&subtests,$desc)       }
-# multi sub subtest(&subtests, $desc = '') is export {
-#     subtests();
-# sub diag(Mu $message) is export {
-# sub _diag(Mu $message, :$force-stderr) {
-# multi sub flunk($reason) is export {
-# multi sub isa-ok(Mu $var, Mu $type, $msg = ("The object is-a '" ~ $type.perl ~ "'")) is export {
-# multi sub does-ok(Mu $var, Mu $type, $msg = ("The object does role '" ~ $type.perl ~ "'")) is export {
-# multi sub can-ok(Mu $var, Str $meth, $msg = ( ($var.defined ?? "An object of type '" !! "The type '" ) ~ $var.WHAT.perl ~ "' can do the method '$meth'") ) is export {
-# multi sub like(Str $got, Regex $expected, $desc = '') is export {
-# multi sub unlike(Str $got, Regex $expected, $desc = '') is export {
-# multi sub use-ok(Str $code, $msg = ("The module can be use-d ok")) is export {
-# multi sub dies-ok(Callable $code, $reason = '') is export {
-# multi sub lives-ok(Callable $code, $reason = '') is export {
-# multi sub eval-dies-ok(Str $code, $reason = '') is export {
-# multi sub eval-lives-ok(Str $code, $reason = '') is export {
-# multi sub is-deeply(Mu $got, Mu $expected, $reason = '') is export {
-# sub throws-like($code, $ex_type, $reason?, *%matcher) is export {
-#     subtest {
-# sub _is_deeply(Mu $got, Mu $expected) {
-# sub die-on-fail {
-# sub eval_exception($code) {
-# sub proclaim($cond, $desc is copy ) {
-# sub done-testing() is export {
-
-
 =finish
 
 ## Goals:
@@ -467,8 +417,8 @@ sub exgo ($expected, $got) {
 * Die on failures
 * Alter output handler
 
-Routines in category: ✓`plan`, ✓`done-testing`, ✓`skip`, `skip-rest`, `output`,
-`failure-output`, `todo-output`
+Routines in category: ✓`plan`, ✓`done-testing`, ✓`skip`, `skip-rest`,
+`bailout`, `output`, `failure-output`, `todo-output`
 
 Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
 
