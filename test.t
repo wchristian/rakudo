@@ -190,4 +190,9 @@ eval-dies-ok '1';
 eval-dies-ok 'die', 'just a test';
 eval-dies-ok 'die';
 
+eval-lives-ok 'die', 'just a test';
+eval-lives-ok 'die';
+eval-lives-ok '1', 'just a test';
+eval-lives-ok '1';
+
 done-testing;

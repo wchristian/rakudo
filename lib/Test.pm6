@@ -204,6 +204,12 @@ sub eval-dies-ok(Str $code, $desc = '') is export {
     @Testers[0].test: $death, :$desc;
 }
 
+sub eval-lives-ok(Str $code, $desc = '') is export {
+    try EVAL $code;
+    my $error = $!;
+    @Testers[0].test: !$error.defined, :failure{ "Error: $error" }, :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -376,7 +382,7 @@ Routines in category: `todo`, `subtest`
 Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
 ✓`is-approx`, ✓`flunk`, ✓`isa-ok`, ✓`does-ok`, ✓`can-ok`, ✓`like`,
 ✓`unlike`, ✓`use-ok`, ✓`dies-ok`, ✓`lives-ok`,
-✓`eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
+✓`eval-dies-ok`, ✓`eval-lives-ok`, `is-deeply`, `throws-like`
 
 ### Auxiliary Routines
 
@@ -426,3 +432,5 @@ get there)
 <TestNinja> m: use Test; unlike 'foo', /foo/
 <camelia> rakudo-moar 2c95f7: OUTPUT«not ok 1 - ␤␤# Failed test at <tmp>
     line 1␤#      expected: '/foo/'␤#      got: 'foo'␤»
+
+* Inconsistency of failure output between lives-ok and eval-lives-ok
