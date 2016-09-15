@@ -7,6 +7,9 @@ class Tester { ... }
 my @Testers = Tester.new;
 END @Testers[0].cleanup;
 
+sub diag (Mu $message) is export {
+    @Testers[0].diag: $message.Str, :stderr;
+}
 multi plan (Cool $n)    is export { @Testers[0].plan: $n; }
 multi plan (Whatever $) is export {} # no plan, by default
 multi plan ()           is export {} # no plan, by default
@@ -491,7 +494,7 @@ Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-
 
 * Display arbitrary messages requested by test author
 
-Routines in category: `diag`
+Routines in category: ✓`diag`
 
 -----------------------------------------------------
 

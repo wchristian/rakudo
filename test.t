@@ -238,4 +238,7 @@ ok 0;
 ok 0;
 ok 1;
 
+diag ^10;
+diag "meow";
+
 done-testing;
