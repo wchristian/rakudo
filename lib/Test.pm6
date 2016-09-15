@@ -26,6 +26,49 @@ multi sub is(Mu $got, Mu:D $expected, $desc = '') is export {
     }, :$desc;
 }
 
+multi sub isnt(Mu $got, Mu:U $expected, $desc = '') is export {
+    @Testers[0].test: ($got.defined or $got !=== $expected), :failure{
+          "expected: anything except '$expected.perl()'\n"
+        ~ "     got: '$got.perl()'"
+    }, :$desc;
+}
+multi sub isnt(Mu $got, Mu:D $expected, $desc = '') is export {
+    @Testers[0].test: (not $got.defined or $got ne $expected), :failure{
+          "expected: anything except '$expected.perl()'\n"
+        ~ "     got: '$got.perl()'"
+    }, :$desc;
+}
+
+multi sub cmp-ok(Mu $got, Callable:D $op, Mu $expected, $desc = '') is export {
+    $got.defined; # mark Failures as handled
+    @Testers[0].test: ?$op($got,$expected), :failure{
+          "expected: '{$expected // $expected.^name}'\n"
+        ~ " matcher: '{$op.?name || $op.^name}'\n"
+        ~ "     got: '$got'"
+    }, :$desc;
+}
+multi sub cmp-ok(Mu $got, $op, Mu $expected, $desc = '') is export {
+    $got.defined; # mark Failures as handled
+    # the three labeled &CALLERS below are as follows:
+    #  #1 handles ops that don't have '<' or '>'
+    #  #2 handles ops that don't have '«' or '»'
+    #  #3 handles all the rest by escaping '<' and '>' with backslashes.
+    #     Note: #3 doesn't eliminate #1, as #3 fails with '<' operator
+    my $matcher
+            =  &CALLERS::("infix:<$op>") #1
+            // &CALLERS::("infix:«$op»") #2
+            // &CALLERS::("infix:<$op.subst(/<?before <[<>]>>/, "\\", :g)>") #3
+            // return @Testers[0].test: False, :failure{
+                "Could not use '$op.perl()' as a comparator."
+            }, :$desc;
+
+    @Testers[0].test: ?$matcher($got,$expected), :failure{
+          "expected: '{$expected // $expected.^name}'\n"
+        ~ " matcher: '{$matcher.?name || $matcher.^name}'\n"
+        ~ "     got: '$got'"
+    }, :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
