@@ -172,4 +172,7 @@ like 'foo', /foo/;
 unlike 'foo', /bar/, 'just a test';
 unlike 'foo', /bar/;
 
+use-ok 'NativeCall', 'just a test';
+use-ok 'NativeCall';
+
 done-testing;

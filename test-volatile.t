@@ -55,4 +55,7 @@ like 'foo', /bar/;
 unlike 'foo', /foo/, 'just a test';
 unlike 'foo', /foo/;
 
+use-ok 'SomethingElese', 'just a test';
+use-ok 'SomethingElese';
+
 done-testing;
