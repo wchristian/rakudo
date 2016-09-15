@@ -104,4 +104,9 @@ cmp-ok 42, 'not-it', 72;
 cmp-ok failure, 'not-it', 42, 'just a test';
 cmp-ok failure, 'not-it', 42;
 
+cmp-ok $Instance, &[===], $Instance, 'just a test';
+cmp-ok $Instance, &[===], $Instance;
+cmp-ok $Class, &[===], $Class, 'just a test';
+cmp-ok $Class, &[===], $Class;
+
 done-testing;

@@ -22,5 +22,9 @@ isnt $Class, $Class;
 isnt $Instance, $Instance, 'just a test';
 isnt $Instance, $Instance;
 
+cmp-ok $Instance, &[===], $Class, 'just a test';
+cmp-ok $Instance, &[===], $Class;
+cmp-ok $Class, &[===], $Instance, 'just a test';
+cmp-ok $Class, &[===], $Instance;
 
 done-testing;
