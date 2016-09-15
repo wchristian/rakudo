@@ -199,4 +199,11 @@ my @deeply = $Class, $Instance, FooRole, $Foo, Foo, 1, 2, rx/^/, *, {;}, "foo";
 is-deeply @deeply, @deeply, 'just a test';
 is-deeply @deeply, @deeply;
 
+subtest 'foo' =>      { ok 1; nok 1, 'just a subtest'; }
+subtest 'foo2' => sub { ok 1; nok 1, 'just a subtest'; }
+subtest 'foo3' =>     { ok 1; nok 0; }
+subtest 'foo4' => sub { ok 1; nok 0; }
+subtest { ok 1 }
+subtest { ok 0 }
+
 done-testing;

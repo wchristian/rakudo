@@ -215,26 +215,48 @@ sub is-deeply(Mu $got, Mu $expected, $desc = '') is export {
         :failure{ exgo $got.perl, $expected.perl }, :$desc;
 }
 
+multi sub subtest(Pair $in)           is export { subtest $in.value, $in.key }
+multi sub subtest($desc, &tests)      is export { subtest &tests,    $desc   }
+multi sub subtest(&tests, $desc = '') is export {
+    my $new-t = Tester.new:
+        :indent(@Testers[0].indent ~ '    ')
+        :in-subtest;
+
+    @Testers.unshift: $new-t;
+    tests;
+    $new-t.done-testing;
+    @Testers.shift;
+    @Testers[0].test: $new-t.is-success, :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
     has int $.tests-run = 0;
     has     $.planned   = *;
+    has Bool $.in-subtest = False;
     has Bool $.no-plan is rw = True;
+    has Str $.indent = '';
+
+    has Bool $!done = False;
     has $!out  = $PROCESS::OUT;
     has $!todo = $PROCESS::OUT;
     has $!err  = $PROCESS::ERR;
 
+    method is-success {
+        $!failed == 0 and ($!no-plan or $!planned == $!tests-run)
+    }
+
     method plan ($!planned) {
         $.no-plan = False;
-        $!out.say: "1..$!planned";
+        $!out.say: $!indent ~ "1..$!planned";
     }
 
     method done-testing {
-        $!out.say: "1..$!tests-run" if $!no-plan;
-    }
+        return if $!done;
+        $!done = True;
+        $!out.say: $!indent ~ "1..$!tests-run" if $!no-plan;
 
-    method cleanup {
         # Wrong quantity of tests
         not $!no-plan
             and $!planned != $!tests-run
@@ -246,9 +268,13 @@ class Tester {
             and self!diag: "Looks like you failed $!failed test{
                 's' unless $!failed == 1
             } of $!tests-run";
+    }
 
+    method cleanup {
+        self.done-testing;
         # Clean up and exit
-        .?close unless $_ === $*OUT | $*ERR for $!out, $!err, $!todo;
+        .?close unless $_ === $*OUT | $*ERR or $!in-subtest
+            for $!out, $!err, $!todo;
 
         exit $!failed min 254 if $!failed;
         exit 255 if not $!no-plan and $!planned != $!tests-run;
@@ -256,7 +282,6 @@ class Tester {
 
     method test (
         $cond = True, :&failure, :$desc is copy = '',
-        :$extra-call-level = 0
     ) {
         $desc .= subst: :g, '#', '\\#'; # escape '#'
         $!tests-run++;
@@ -266,10 +291,14 @@ class Tester {
             $!failed++;
         }
         $tap ~= "ok $!tests-run - $desc";
-        $!out.say: $tap;
+        $!out.say: $!indent ~ $tap;
 
         unless $cond {
-            my $caller = callframe 3 + $extra-call-level;
+            my int $level = 2;
+            my $caller = callframe $level;
+            repeat until !$?FILE.ends-with($caller.file) {
+                $caller = callframe(++$level);
+            }
             self!diag:
                 "\nFailed test $("'$desc'\n" if $desc)at $($caller.file) line "
                 ~ $caller.line ~ ("\n" ~ failure() if &failure);
@@ -278,11 +307,11 @@ class Tester {
         $cond
     }
     method !diag (Str() $message) {
-        $!err.say: $message.subst(:g, rx/^^/, '# ')
+        $!err.say: $!indent ~ $message.subst(:g, rx/^^/, '# ')
                            .subst(:g, rx/^^'#' \s+ $$/, '');
     }
     method diag (Str() $message) {
-        $!out.say: $message.subst(:g, rx/^^/, '# ')
+        $!out.say: $!indent ~ $message.subst(:g, rx/^^/, '# ')
                            .subst(:g, rx/^^'#' \s+ $$/, '');
     }
 }
@@ -376,7 +405,7 @@ Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
 * Mark next X amount of tests as TODO
 * Group X amount of tests as a separate mini-test-suite
 
-Routines in category: `todo`, `subtest`
+Routines in category: `todo`, ✓`subtest`
 
 ### Testing Routines
 
@@ -439,3 +468,5 @@ get there)
     line 1␤#      expected: '/foo/'␤#      got: 'foo'␤»
 
 * Inconsistency of failure output between lives-ok and eval-lives-ok
+
+* multi-line diag() in subtests does not indent subsequent lines correctly
