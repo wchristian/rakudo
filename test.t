@@ -1,9 +1,9 @@
 # plan 2;
 
 sub failure { fail 'tis a failure' }
-my $Class = class {}
+my $Class = class { method foo {} }
 my $Instance = $Class.new;
-class Foo {}
+class Foo { method foo {} }
 my $Foo = Foo.new;
 my $Role = role {};
 role FooRole {};
@@ -158,5 +158,12 @@ isa-ok $Instance, $Class, 'just a test';
 does-ok $Foo but $Role, $Role, 'just a test';
 does-ok $Foo but FooRole, FooRole, 'just a test';
 does-ok $Foo but FooRole, FooRole;
+
+can-ok $Foo, 'foo', 'just a test';
+can-ok $Foo, 'foo';
+can-ok Foo, 'foo', 'just a test';
+can-ok Foo, 'foo';
+can-ok $Instance, 'foo', 'just a test';
+can-ok $Class, 'foo', 'just a test';
 
 done-testing;

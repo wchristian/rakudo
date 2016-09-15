@@ -156,6 +156,16 @@ sub does-ok(
         :failure{ "Type: $var.^name() doesn't do role $type.perl()" }, :$desc;
 }
 
+sub can-ok(
+    Mu $var, Str $meth,
+    $desc = (
+        ($var.defined ?? "An object of type" !! "The type" )
+        ~ " '$var.WHAT.perl()' can do the method '$meth'"
+    )
+) is export {
+    @Testers[0].test: $var.^can($meth), :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -326,7 +336,7 @@ Routines in category: `todo`, `subtest`
     - Do Y on False
 
 Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
-✓`is-approx`, ✓`flunk`, ✓`isa-ok`, ✓`does-ok`, `can-ok`, `like`,
+✓`is-approx`, ✓`flunk`, ✓`isa-ok`, ✓`does-ok`, ✓`can-ok`, `like`,
 `unlike`, `use-ok`, `dies-ok`, `lives-ok`,
 `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
 
