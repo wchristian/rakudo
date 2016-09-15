@@ -15,9 +15,8 @@ sub nok (Mu $cond, $desc = '') is export { @Testers[0].test: !$cond, :$desc; }
 
 multi sub is(Mu $got, Mu:U $expected, $desc = '') is export {
     @Testers[0].test: (not $got.defined and $got === $expected), :failure{
-        my $got-s = $got.defined ?? "'$got.perl()'" !! "($got.^name())";
-          "expected: ($expected.perl())\n"
-        ~ "     got: $got-s"
+        exgo "($expected.perl())",
+            $got.defined ?? "'$got.perl()'" !! "($got.^name())";
     }, :$desc;
 }
 multi sub is(Mu $got, Mu:D $expected, $desc = '') is export {
@@ -27,39 +26,28 @@ multi sub is(Mu $got, Mu:D $expected, $desc = '') is export {
         unless $test = $got eq $expected {
             if try [eq] ($got, $expected)».Str».subst(/\s+/, '', :g) {
                 # only white space differs, so better show it to the user
-                $failure = {
-                      "expected: {$expected.perl}\n"
-                    ~ "     got: {$got.perl}"
-                };
+                $failure = { exgo $expected.perl, $got.perl };
             }
             else {
-                $failure = {
-                      "expected: '$expected'\n"
-                    ~ "     got: '$got'"
-                };
+                $failure = { exgo "'$expected'", "'$got'" };
             }
         }
     }
     else {
-        $failure = {
-              "expected: '$expected'\n"
-            ~ "     got: ($got.^name())"
-        };
+        $failure = { exgo "'$expected'", "($got.^name())" };
     }
     @Testers[0].test: ?$test, |(:$failure if $failure), :$desc;
 }
 
 multi sub isnt(Mu $got, Mu:U $expected, $desc = '') is export {
-    @Testers[0].test: ($got.defined or $got !=== $expected), :failure{
-          "expected: anything except '$expected.perl()'\n"
-        ~ "     got: '$got.perl()'"
-    }, :$desc;
+    @Testers[0].test: ($got.defined or $got !=== $expected),
+        :failure{ exgo "anything except '$expected.perl()'", "'$got.perl()'" },
+        :$desc;
 }
 multi sub isnt(Mu $got, Mu:D $expected, $desc = '') is export {
-    @Testers[0].test: (not $got.defined or $got ne $expected), :failure{
-          "expected: anything except '$expected.perl()'\n"
-        ~ "     got: '$got.perl()'"
-    }, :$desc;
+    @Testers[0].test: (not $got.defined or $got ne $expected),
+        :failure{ exgo "anything except '$expected.perl()'", "'$got.perl()'" },
+        :$desc;
 }
 
 multi sub cmp-ok(Mu $got, Callable:D $op, Mu $expected, $desc = '') is export {
@@ -161,6 +149,11 @@ class Tester {
         $!out.say: $message.subst(:g, rx/^^/, '# ')
                            .subst(:g, rx/^^'#' \s+ $$/, '');
     }
+}
+
+sub exgo ($expected, $got) {
+      "expected: $expected\n"
+    ~ "     got: $got"
 }
 
 # sub done-testing () is export { $Tester.done-testing; }
