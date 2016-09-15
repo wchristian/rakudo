@@ -230,7 +230,7 @@ sub exgo ($expected, $got) {
 * Die on failures
 * Alter output handler
 
-Routines in category: ✓`plan`, `done-testing`, `skip`, `skip-rest`, `output`,
+Routines in category: ✓`plan`, ✓`done-testing`, `skip`, `skip-rest`, `output`,
 `failure-output`, `todo-output`
 
 Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
@@ -248,9 +248,9 @@ Routines in category: `todo`, `subtest`
     - Do X on True
     - Do Y on False
 
-Routines in category: `pass`, ✓`ok`, ✓`nok`, `is`, `isnt`, `cmp-ok`,
+Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
 `is-approx`,
-`flunk`, `isa-ok`, `does-ok`, `can-ok`, `like`, `unlike`, `use-ok`, `dies-ok`,
+✓`flunk`, `isa-ok`, `does-ok`, `can-ok`, `like`, `unlike`, `use-ok`, `dies-ok`,
 `lives-ok`, `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
 
 ### Auxiliary Routines
