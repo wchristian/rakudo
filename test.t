@@ -206,4 +206,8 @@ subtest 'foo4' => sub { ok 1; nok 0; }
 subtest { ok 1 }
 subtest { ok 0 }
 
+skip;
+skip 'test';
+skip 'test2', 2;
+
 done-testing;

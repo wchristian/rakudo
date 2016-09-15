@@ -229,6 +229,19 @@ multi sub subtest(&tests, $desc = '') is export {
     @Testers[0].test: $new-t.is-success, :$desc;
 }
 
+multi sub skip() {
+    @Testers[0].test: True, :desc("# SKIP");
+}
+multi sub skip($desc, Numeric $count = 1) is export {
+    for ^$count {
+        @Testers[0].test: True, :desc("# SKIP $desc");
+    }
+}
+multi sub skip($desc, $count) is export {
+    die "skip() was passed a non-numeric number of tests.  "
+        ~ "Did you get the arguments backwards?";
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -395,7 +408,7 @@ sub exgo ($expected, $got) {
 * Die on failures
 * Alter output handler
 
-Routines in category: ✓`plan`, ✓`done-testing`, `skip`, `skip-rest`, `output`,
+Routines in category: ✓`plan`, ✓`done-testing`, ✓`skip`, `skip-rest`, `output`,
 `failure-output`, `todo-output`
 
 Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
@@ -470,3 +483,7 @@ get there)
 * Inconsistency of failure output between lives-ok and eval-lives-ok
 
 * multi-line diag() in subtests does not indent subsequent lines correctly
+
+* Double-space in non-Numeric skip count warning: die "skip() was passed a
+non-numeric number of tests.  Did you get the arguments backwards?" if $count
+!~~ Numeric;
