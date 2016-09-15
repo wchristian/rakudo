@@ -5,6 +5,8 @@ my $Class = class {}
 my $Instance = $Class.new;
 class Foo {}
 my $Foo = Foo.new;
+my $Role = role {};
+role FooRole {};
 
 is $Class, Int, 'just a test';
 is $Class, Int;
@@ -37,5 +39,11 @@ isa-ok $Foo, $Class;
 isa-ok $Class, $Class;
 isa-ok $Instance, $Class;
 isa-ok $Foo, Foo;
+
+does-ok $Foo but $Role, $Role;
+does-ok $Foo but role {}, $Role;
+does-ok $Foo but role {}, $Role, 'just a test';
+does-ok $Foo but role {}, FooRole, 'just a test';
+does-ok $Foo but role {}, FooRole;
 
 done-testing;

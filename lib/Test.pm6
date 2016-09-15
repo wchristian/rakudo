@@ -149,6 +149,13 @@ sub isa-ok(
         :failure{ "Actual type: $var.^name()" }, :$desc;
 }
 
+sub does-ok(
+    Mu $var, Mu $type, $desc = "The object does role '$type.perl()'"
+) is export {
+    @Testers[0].test: $var.does($type),
+        :failure{ "Type: $var.^name() doesn't do role $type.perl()" }, :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -319,9 +326,9 @@ Routines in category: `todo`, `subtest`
     - Do Y on False
 
 Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
-✓`is-approx`,
-✓`flunk`, ✓`isa-ok`, `does-ok`, `can-ok`, `like`, `unlike`, `use-ok`, `dies-ok`,
-`lives-ok`, `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
+✓`is-approx`, ✓`flunk`, ✓`isa-ok`, ✓`does-ok`, `can-ok`, `like`,
+`unlike`, `use-ok`, `dies-ok`, `lives-ok`,
+`eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
 
 ### Auxiliary Routines
 

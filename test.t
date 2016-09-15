@@ -5,6 +5,8 @@ my $Class = class {}
 my $Instance = $Class.new;
 class Foo {}
 my $Foo = Foo.new;
+my $Role = role {};
+role FooRole {};
 
 note ok 0, 'just a test';
 ok 0;
@@ -152,5 +154,9 @@ is_approx 5, 5-1e-6;
 isa-ok $Foo, Foo, 'just a test';
 isa-ok $Class, $Class, 'just a test';
 isa-ok $Instance, $Class, 'just a test';
+
+does-ok $Foo but $Role, $Role, 'just a test';
+does-ok $Foo but FooRole, FooRole, 'just a test';
+does-ok $Foo but FooRole, FooRole;
 
 done-testing;
