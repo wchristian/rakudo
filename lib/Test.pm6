@@ -7,6 +7,10 @@ class Tester { ... }
 my @Testers = Tester.new: :die-if-fail(%*ENV<PERL6_TEST_DIE_ON_FAIL>);
 END @Testers[0].cleanup;
 
+our sub output         is rw { @Testers[0].out  }
+our sub failure_output is rw { @Testers[0].err  }
+our sub todo_output    is rw { @Testers[0].todo }
+
 sub MONKEY-SEE-NO-EVAL() is export { 1 }
 sub bail-out ($desc?) is export { @Testers[0].bail-out: $desc; }
 sub diag (Mu $message) is export {
@@ -318,9 +322,9 @@ class Tester {
     has Int $.todo-num = 0;
 
     has Bool $!done = False;
-    has $!out  = $PROCESS::OUT;
-    has $!todo = $PROCESS::OUT;
-    has $!err  = $PROCESS::ERR;
+    has $.out  is rw = $PROCESS::OUT;
+    has $.todo is rw = $PROCESS::OUT;
+    has $.err  is rw = $PROCESS::ERR;
 
     method is-success {
         $!failed == 0 and ($!no-plan or $!planned == $!tests-run)
@@ -453,7 +457,7 @@ sub eval-exception($code) {
 * Alter output handler
 
 Routines in category: ✓`plan`, ✓`done-testing`, ✓`skip`, ✓`skip-rest`,
-✓`bail-out`, `output`, `failure-output`, `todo-output`
+✓`bail-out`, ✓`output`, ✓`failure-output`, ✓`todo-output`
 
 Env vars in category: ✓`PERL6_TEST_DIE_ON_FAIL`
 
