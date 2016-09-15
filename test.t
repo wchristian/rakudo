@@ -195,4 +195,8 @@ eval-lives-ok 'die';
 eval-lives-ok '1', 'just a test';
 eval-lives-ok '1';
 
+my @deeply = $Class, $Instance, FooRole, $Foo, Foo, 1, 2, rx/^/, *, {;}, "foo";
+is-deeply @deeply, @deeply, 'just a test';
+is-deeply @deeply, @deeply;
+
 done-testing;

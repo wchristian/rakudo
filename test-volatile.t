@@ -58,4 +58,8 @@ unlike 'foo', /foo/;
 use-ok 'SomethingElese', 'just a test';
 use-ok 'SomethingElese';
 
+my @deeply = $Class, $Instance, FooRole, $Foo, Foo, 1, 2, rx/^/, *, {;}, "foo";
+is-deeply @deeply, [|@deeply, 42], 'just a test';
+is-deeply @deeply, [|@deeply, 42];
+
 done-testing;
