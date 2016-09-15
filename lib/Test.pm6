@@ -8,6 +8,7 @@ my @Testers = Tester.new;
 END @Testers[0].cleanup;
 
 sub MONKEY-SEE-NO-EVAL() is export { 1 }
+sub bail-out ($desc?) is export { @Testers[0].bail-out: $desc; }
 sub diag (Mu $message) is export {
     @Testers[0].diag: $message.Str, :stderr;
 }
@@ -326,6 +327,12 @@ class Tester {
         $!out.say: $!indent ~ "1..$!planned";
     }
 
+    method bail-out ($desc) {
+        $!out.put: join ' ', 'Bail out!', ($desc if $desc);
+        $!cleaned-up = True;
+        exit 255;
+    }
+
     method done-testing (:$automated){
         return if $!done;
         $!done = True;
@@ -432,7 +439,7 @@ sub eval-exception($code) {
 * Alter output handler
 
 Routines in category: ✓`plan`, ✓`done-testing`, ✓`skip`, ✓`skip-rest`,
-`bailout`, `output`, `failure-output`, `todo-output`
+✓`bail-out`, `output`, `failure-output`, `todo-output`
 
 Env vars in category: `PERL6_TEST_DIE_ON_FAIL`
 
