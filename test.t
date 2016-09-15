@@ -2,7 +2,7 @@
 
 sub failure { fail 'tis a failure' }
 my $Class = class {}
-my $Instance = class {}.new;
+my $Instance = $Class.new;
 class Foo {}
 my $Foo = Foo.new;
 
@@ -148,5 +148,9 @@ is_approx 1e-7, 1.1e-7, 'just a test';
 is_approx 1e-7, 1.1e-7;
 is_approx 5, 5-1e-6, 'just a test';
 is_approx 5, 5-1e-6;
+
+isa-ok $Foo, Foo, 'just a test';
+isa-ok $Class, $Class, 'just a test';
+isa-ok $Instance, $Class, 'just a test';
 
 done-testing;

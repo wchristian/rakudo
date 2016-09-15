@@ -142,6 +142,13 @@ sub is-approx-calculate (
     }, :$desc;
 }
 
+sub isa-ok(
+    Mu $var, Mu $type, $desc = "The object is-a '$type.perl()'"
+) is export {
+    @Testers[0].test: $var.isa($type),
+        :failure{ "Actual type: $var.^name()" }, :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -313,7 +320,7 @@ Routines in category: `todo`, `subtest`
 
 Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
 ✓`is-approx`,
-✓`flunk`, `isa-ok`, `does-ok`, `can-ok`, `like`, `unlike`, `use-ok`, `dies-ok`,
+✓`flunk`, ✓`isa-ok`, `does-ok`, `can-ok`, `like`, `unlike`, `use-ok`, `dies-ok`,
 `lives-ok`, `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
 
 ### Auxiliary Routines
