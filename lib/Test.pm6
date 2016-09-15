@@ -264,7 +264,10 @@ sub throws-like(
         skip 'Code did not die, can not check exception', 1 + %matcher.elems;
         CATCH {
             default {
-                pass $msg;
+                # TODO: remove the undefined check once we properly handle
+                # messages for Failures. Currently, this replicates behaviour
+                # of old Test.pm6
+                pass $msg // '';
                 my $got-type = $_;
                 my $type-ok = $got-type ~~ $ex-type;
                 @Testers[0].test: $type-ok, :failure{
@@ -509,7 +512,9 @@ non-numeric number of tests.  Did you get the arguments backwards?" if $count
 
 * throws-like has incosistent "code died/dies" message on failure to die;
 as well as capitalization of Expected/Got messages. Different indent
-for the expected got messages. Also, Test.pm6 is referenced in failures
+for the expected got messages. Also, Test.pm6 is referenced in failures.
+ALSO, the message for "code dies" is not printed when the code given is a
+Failure
 
 * todo() does not have the same API as skip() [check count is numeric; let
 omit description]
