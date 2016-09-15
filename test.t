@@ -43,6 +43,8 @@ is $Foo, $Foo, 'just a test';
 is $Foo, $Foo;
 is failure, 42, 'just a test';
 is failure, 42;
+is 'foo ', 'foo', 'just a test'; # only whitespace differs
+is 'foo ', 'foo';
 
 isnt Int, Int, 'just a test';
 isnt Int, Int;

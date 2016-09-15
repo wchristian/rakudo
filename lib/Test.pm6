@@ -15,15 +15,38 @@ sub nok (Mu $cond, $desc = '') is export { @Testers[0].test: !$cond, :$desc; }
 
 multi sub is(Mu $got, Mu:U $expected, $desc = '') is export {
     @Testers[0].test: (not $got.defined and $got === $expected), :failure{
+        my $got-s = $got.defined ?? "'$got.perl()'" !! "($got.^name())";
           "expected: ($expected.perl())\n"
-        ~ "     got: '$got.perl()'"
+        ~ "     got: $got-s"
     }, :$desc;
 }
 multi sub is(Mu $got, Mu:D $expected, $desc = '') is export {
-    @Testers[0].test: ($got.defined and $got eq $expected), :failure{
-          "expected: '$expected.perl()'\n"
-        ~ "     got: ($got.perl())"
-    }, :$desc;
+    my $test;
+    my $failure;
+    if $got.defined {
+        unless $test = $got eq $expected {
+            if try [eq] ($got, $expected)».Str».subst(/\s+/, '', :g) {
+                # only white space differs, so better show it to the user
+                $failure = {
+                      "expected: {$expected.perl}\n"
+                    ~ "     got: {$got.perl}"
+                };
+            }
+            else {
+                $failure = {
+                      "expected: '$expected'\n"
+                    ~ "     got: '$got'"
+                };
+            }
+        }
+    }
+    else {
+        $failure = {
+              "expected: '$expected'\n"
+            ~ "     got: ($got.^name())"
+        };
+    }
+    @Testers[0].test: ?$test, |(:$failure if $failure), :$desc;
 }
 
 multi sub isnt(Mu $got, Mu:U $expected, $desc = '') is export {
