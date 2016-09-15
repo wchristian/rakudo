@@ -186,6 +186,12 @@ sub use-ok(Str $module, $desc = "The module can be use-d ok") is export {
     @Testers[0].test: !$error.defined, :failure{ $error }, :$desc;
 }
 
+sub dies-ok(Callable $code, $desc = '') is export {
+    my $death = 1;
+    try { $code(); $death = 0; }
+    @Testers[0].test: $death, :$desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -357,7 +363,7 @@ Routines in category: `todo`, `subtest`
 
 Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
 ✓`is-approx`, ✓`flunk`, ✓`isa-ok`, ✓`does-ok`, ✓`can-ok`, ✓`like`,
-✓`unlike`, ✓`use-ok`, `dies-ok`, `lives-ok`,
+✓`unlike`, ✓`use-ok`, ✓`dies-ok`, `lives-ok`,
 `eval-dies-ok`, `eval-lives-ok`, `is-deeply`, `throws-like`
 
 ### Auxiliary Routines

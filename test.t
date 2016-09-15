@@ -175,4 +175,9 @@ unlike 'foo', /bar/;
 use-ok 'NativeCall', 'just a test';
 use-ok 'NativeCall';
 
+dies-ok { die }, 'just a test';
+dies-ok { die };
+dies-ok { 1 }, 'just a test';
+dies-ok { 1 };
+
 done-testing;
