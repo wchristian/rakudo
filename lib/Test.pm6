@@ -242,6 +242,49 @@ multi sub skip($desc, $count) is export {
         ~ "Did you get the arguments backwards?";
 }
 
+sub throws-like(
+    $code, $ex-type, $desc = "did we throws-like $ex-type.^name()?",
+    *%matcher
+) is export {
+    subtest {
+        plan 2 + %matcher.keys;
+        my $msg;
+        if $code ~~ Callable {
+            $msg = 'code dies';
+            $code()
+        } else {
+            $msg = "'$code' died";
+            EVAL $code, context => CALLER::CALLER::CALLER::CALLER::;
+        }
+        flunk $msg;
+        skip 'Code did not die, can not check exception', 1 + %matcher.elems;
+        CATCH {
+            default {
+                pass $msg;
+                my $got-type = $_;
+                my $type-ok = $got-type ~~ $ex-type;
+                @Testers[0].test: $type-ok, :failure{
+                      "Expected: $ex-type.^name()\n"
+                    ~ "Got:      $got-type.^name()\n"
+                    ~ "Exception message: $got-type.message()"
+                }, :desc("right exception type ($ex-type.^name())");
+
+                if $type-ok {
+                    for %matcher.kv -> $k, $v {
+                        my $got is default(Nil) = $got-type."$k"();
+                        @Testers[0].test: $got ~~ $v, :failure{
+                              "Expected: $($v ~~ Str ?? $v !! $v.perl)\n"
+                            ~ "Got:      $got";
+                        }, :desc(".$k matches $v.gist()");
+                    }
+                } else {
+                    skip 'wrong exception type', %matcher.elems;
+                }
+            }
+        }
+    }, $desc;
+}
+
 class Tester {
     has int $.die-on-fail = ?%*ENV<PERL6_TEST_DIE_ON_FAIL>;
     has int $.failed    = 0;
@@ -429,7 +472,7 @@ Routines in category: `todo`, ✓`subtest`
 Routines in category: ✓`pass`, ✓`ok`, ✓`nok`, ✓`is`, ✓`isnt`, ✓`cmp-ok`,
 ✓`is-approx`, ✓`flunk`, ✓`isa-ok`, ✓`does-ok`, ✓`can-ok`, ✓`like`,
 ✓`unlike`, ✓`use-ok`, ✓`dies-ok`, ✓`lives-ok`,
-✓`eval-dies-ok`, ✓`eval-lives-ok`, ✓`is-deeply`, `throws-like`
+✓`eval-dies-ok`, ✓`eval-lives-ok`, ✓`is-deeply`, ✓`throws-like`
 
 ### Auxiliary Routines
 
@@ -487,3 +530,9 @@ get there)
 * Double-space in non-Numeric skip count warning: die "skip() was passed a
 non-numeric number of tests.  Did you get the arguments backwards?" if $count
 !~~ Numeric;
+
+* skip backslashes the '#' before SKIP, even thought that's not needed
+
+* throws-like has incosistent "code died/dies" message on failure to die;
+as well as capitalization of Expected/Got messages. Different indent
+for the expected got messages. Also, Test.pm6 is referenced in failures

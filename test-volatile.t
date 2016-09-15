@@ -62,4 +62,36 @@ my @deeply = $Class, $Instance, FooRole, $Foo, Foo, 1, 2, rx/^/, *, {;}, "foo";
 is-deeply @deeply, [|@deeply, 42], 'just a test';
 is-deeply @deeply, [|@deeply, 42];
 
+throws-like { my $x = "abc"; my $y = +$x.sum; }, X::Subscript::Negative,
+    'just a test';
+throws-like { my $x = "abc"; my $y = +$x.sum; }, X::Subscript::Negative;
+throws-like ｢ my $x = "abc"; my $y = +$x.sum; ｣, X::Subscript::Negative,
+    'just a test';
+throws-like ｢ my $x = "abc"; my $y = +$x.sum; ｣, X::Subscript::Negative;
+
+throws-like { X::AdHoc.new.throw }, X::Str::Numeric, 'just a test',
+    payload => ｢Unexplained error｣, message => ｢Unexplained error｣;
+throws-like ｢ X::AdHoc.new.throw ｣, X::Str::Numeric, 'just a test',
+    payload => ｢Unexplained error｣, message => ｢Unexplained error｣;
+
+throws-like { X::AdHoc.new.throw }, X::AdHoc, 'just a test',
+    payload => ｢Unexplained error｣, message => ｢Unexplained errorZZZ｣;
+throws-like ｢ X::AdHoc.new.throw ｣, X::AdHoc, 'just a test',
+    payload => ｢Unexplained error｣, message => ｢Unexplained errorZZZ｣;
+
+throws-like { X::AdHoc.new.throw }, X::AdHoc, 'just a test',
+    payload => ｢Unexplained errorZZZ｣, message => ｢Unexplained errorZZZ｣;
+throws-like ｢ X::AdHoc.new.throw ｣, X::AdHoc, 'just a test',
+    payload => ｢Unexplained errorZZZ｣, message => ｢Unexplained errorZZZ｣;
+
+throws-like { X::AdHoc.new.throw }, X::Str::Numeric, 'just a test',
+    payload => ｢Unexplained error｣;
+throws-like ｢ X::AdHoc.new.throw ｣, X::Str::Numeric, 'just a test',
+    payload => ｢Unexplained error｣;
+
+throws-like { X::AdHoc.new.throw }, X::AdHoc, 'just a test',
+    payload => ｢Unexplained errorZZZ｣;
+throws-like ｢ X::AdHoc.new.throw ｣, X::AdHoc, 'just a test',
+    payload => ｢Unexplained errorZZZ｣;
+
 done-testing;

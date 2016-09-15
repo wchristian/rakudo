@@ -210,4 +210,24 @@ skip;
 skip 'test';
 skip 'test2', 2;
 
+throws-like { my $x = "abc"; my $y = +$x.sum; }, X::Str::Numeric, 'just a test';
+throws-like { my $x = "abc"; my $y = +$x.sum; }, X::Str::Numeric;
+throws-like ｢ my $x = "abc"; my $y = +$x.sum; ｣, X::Str::Numeric, 'just a test';
+throws-like ｢ my $x = "abc"; my $y = +$x.sum; ｣, X::Str::Numeric;
+
+throws-like { X::AdHoc.new.throw }, X::AdHoc, 'just a test',
+    payload => ｢Unexplained error｣, message => ｢Unexplained error｣;
+throws-like ｢ X::AdHoc.new.throw ｣, X::AdHoc, 'just a test',
+    payload => ｢Unexplained error｣, message => ｢Unexplained error｣;
+
+throws-like { X::AdHoc.new.throw }, X::AdHoc, 'just a test',
+    payload => ｢Unexplained error｣;
+throws-like ｢ X::AdHoc.new.throw ｣, X::AdHoc, 'just a test',
+    payload => ｢Unexplained error｣;
+
+throws-like { X::AdHoc.new.throw }, X::AdHoc, 'just a test',
+    payload => ｢Unexplained error｣;
+throws-like ｢ X::AdHoc.new.throw ｣, X::AdHoc, 'just a test',
+    payload => ｢Unexplained error｣;
+
 done-testing;
