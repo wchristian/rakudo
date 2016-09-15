@@ -2,7 +2,9 @@
 
 sub failure { fail 'tis a failure' }
 my $Class = class {}
+my $Instance = class {}.new;
 class Foo {}
+my $Foo = Foo.new;
 
 note ok 0, 'just a test';
 ok 0;
@@ -22,8 +24,6 @@ is 42, Int, 'just a test';
 is 42, Int;
 is Int, Int, 'just a test';
 is Int, Int;
-is $Class, Int, 'just a test';
-is $Class, Int;
 is $Class, $Class, 'just a test';
 is $Class, $Class;
 is Foo, Foo, 'just a test';
@@ -35,20 +35,12 @@ is Int, 42, 'just a test';
 is Int, 42;
 is 42, 42, 'just a test';
 is 42, 42;
-is $Class, 42, 'just a test';
-is $Class, 42;
-is $Class.new, 42, 'just a test';
-is $Class.new, 42;
-is $Class.new, $Class.new, 'just a test';
-is $Class.new, $Class.new;
+is $Instance, $Instance, 'just a test';
+is $Instance, $Instance;
 is Foo, 42, 'just a test';
 is Foo, 42;
-is Foo.new, 42, 'just a test';
-is Foo.new, 42;
-is Foo, Foo.new, 'just a test';
-is Foo, Foo.new;
-is Foo.new, Foo.new, 'just a test';
-is Foo.new, Foo.new;
+is $Foo, $Foo, 'just a test';
+is $Foo, $Foo;
 is failure, 42, 'just a test';
 is failure, 42;
 
@@ -58,31 +50,26 @@ isnt 42, Int, 'just a test';
 isnt 42, Int;
 isnt $Class, Int, 'just a test';
 isnt $Class, Int;
-isnt $Class, $Class, 'just a test';
-isnt $Class, $Class;
 isnt Foo, Int, 'just a test';
 isnt Foo, Int;
-isnt Foo, Foo, 'just a test';
-isnt Foo, Foo;
 isnt failure, Int, 'just a test';
 isnt failure, Int;
-
+isnt Foo, Foo, 'just a test';
+isnt Foo, Foo;
 isnt 42, 42, 'just a test';
 isnt 42, 42;
 isnt Int, 42, 'just a test';
 isnt Int, 42;
 isnt $Class, 42, 'just a test';
 isnt $Class, 42;
-isnt $Class.new, $Class.new, 'just a test';
-isnt $Class.new, $Class.new;
 isnt Foo, 42, 'just a test';
 isnt Foo, 42;
-isnt Foo, Foo.new, 'just a test';
-isnt Foo, Foo.new;
-isnt Foo.new, 42, 'just a test';
-isnt Foo.new, 42;
-isnt Foo.new, Foo.new, 'just a test';
-isnt Foo.new, Foo.new;
+isnt Foo, $Foo, 'just a test';
+isnt Foo, $Foo;
+isnt $Foo, 42, 'just a test';
+isnt $Foo, 42;
+isnt $Foo, $Foo, 'just a test';
+isnt $Foo, $Foo;
 isnt failure, 42, 'just a test';
 isnt failure, 42;
 
