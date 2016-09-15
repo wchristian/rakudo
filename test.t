@@ -180,4 +180,9 @@ dies-ok { die };
 dies-ok { 1 }, 'just a test';
 dies-ok { 1 };
 
+lives-ok { die }, 'just a test';
+lives-ok { die };
+lives-ok { 1 }, 'just a test';
+lives-ok { 1 };
+
 done-testing;
