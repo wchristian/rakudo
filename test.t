@@ -185,4 +185,9 @@ lives-ok { die };
 lives-ok { 1 }, 'just a test';
 lives-ok { 1 };
 
+eval-dies-ok '1', 'just a test';
+eval-dies-ok '1';
+eval-dies-ok 'die', 'just a test';
+eval-dies-ok 'die';
+
 done-testing;
