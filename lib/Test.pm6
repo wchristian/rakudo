@@ -1,3 +1,52 @@
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+
+# Note to the spacemen of the future: this branch contains an attempt to make
+# Test.pm6 a bit easier to maintain, by storing all state in an object and
+# using that object to produce all of the output depending on that state.
+
+# While the method worked very well to reduce code amount (~244 lines fewer!),
+# there is a hefty performance penalty, ranging from 5%-17% on a couple of
+# stresstest runs, to a up to 33% slower on a more realitic benchmark using
+# a subset of most common tests (see ./bench.t in this branch).
+
+# Here's a bit of info if in the future this branch will end up being wanted:
+
+# ./lib/OldTest.pm6 contains the current (at the time of this writing) Test.pm6
+# ./lib/Test.pm6 (this file) contains the rewrite attempt
+# ./bench.t a selection of common tests run in a loop for benchmarking purposes
+# ./test.t a whole bunch of tests for output difference testing)
+# ./test-volatile.t a whole bunch of tests for output difference testing; these
+# have values that change on every run, so a portion of the results needs to be
+# compared manually
+# ./tnew           runs ./test.t using lib/Test.pm6
+# ./tnew any-arg   runs ./test-volatile.t using lib/Test.pm6
+# ./told           runs ./test.t using lib/OldTest.pm6
+# ./told any-arg   runs ./test-volatile.t using lib/OldTest.pm6
+# ./differ         runs color-diff on outputs from ./tnew and ./told
+# ./differ any-arg runs color-diff on outputs
+#                     from ./tnew any-arg and ./told any-arg
+
+# The bottom of this file also contains some design notes, as well as a
+# few issues with the "old" Test.pm6 that were identified during the
+# creation of this module. Those issues may have already been fixed
+# when you're reading this.
+
+# Overall, this branch can be deleted when enough time has passed to not feel
+# the disappointment in losing X amount of hours writing a failed experiment.
+
+# So long! I hope the future is a good one.
+
+# -- Zoffix Znet
+
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+
 unit module Test;
 
 use MONKEY-SEE-NO-EVAL;
