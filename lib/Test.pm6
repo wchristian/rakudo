@@ -13,15 +13,12 @@ our sub failure_output is rw { $Tester.err  }
 our sub todo_output    is rw { $Tester.todo }
 
 sub MONKEY-SEE-NO-EVAL() is export { 1 }
-sub bail-out ($desc?) is export { $Tester.bail-out: $desc; }
-sub diag (Mu $message) is export {
-    $Tester.diag: $message.Str, :stderr;
-}
-multi plan (Cool \n)    is export { $Tester.plan: n; }
-multi plan (Whatever $) is export {} # no plan, by default
-multi plan ()           is export {} # no plan, by default
-sub done-testing()      is export { $Tester.done-testing }
-
+sub bail-out ($desc?)    is export { $Tester.bail-out: $desc; }
+sub diag (Mu $message)   is export { $Tester.diag: $message.Str, :stderr; }
+multi plan (Cool \n)     is export { $Tester.plan: n; }
+multi plan (Whatever $)  is export {} # no plan, by default
+multi plan ()            is export {} # no plan, by default
+sub done-testing()       is export { $Tester.done-testing }
 sub pass  (\desc = '')         is export { $Tester.test: True,  desc; }
 sub flunk (\desc = '')         is export { $Tester.test: False, desc; }
 sub ok  (Mu \cond, \desc = '') is export { $Tester.test: ?cond, desc; }
