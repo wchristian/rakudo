@@ -548,3 +548,7 @@ TODO:
 
 Refactor diag()
 Add --> Nil to all routines that matter
+
+* Some sort of a crash with large number of failing tests. Present in both
+new and old version:
+https://gist.github.com/zoffixznet/98e8e5a01d07c47e0487d68354142f27
