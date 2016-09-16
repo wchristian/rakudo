@@ -29,8 +29,8 @@ sub nok (Mu \cond, \desc = '') is export { $Tester.test: !cond, desc; }
 
 multi sub is(Mu \got, Mu:U \expected, \desc = '') is export {
     $Tester.test: (not got.defined and got === expected), desc, {
-        "expected: (" ~ expected.perl ~ ")\n     got: "
-            ~ (got.defined ?? "'" ~ got.perl ~ "'" !! "(" ~ got.^name ~ ")");
+        exgo "($(expected.perl))",
+            got.defined ?? "'$(got.perl)'" !! "($(got.^name))";
     };
 }
 multi sub is(Mu \got, Mu:D \expected, \desc = '') is export {
@@ -40,36 +40,26 @@ multi sub is(Mu \got, Mu:D \expected, \desc = '') is export {
         unless $test = got eq expected {
             if try [eq] (got, expected)».Str».subst(/\s+/, '', :g) {
                 # only white space differs, so better show it to the user
-                $failure = {
-                    "expected: " ~ expected.perl ~ "\n     got: " ~ got.perl
-                };
+                $failure = { exgo expected.perl, got.perl };
             }
             else {
-                $failure = {
-                    "expected: '" ~ expected ~ "'\n     got: '" ~ got ~ "'"
-                };
+                $failure = { exgo "'$(expected)'", "'$(got)'" };
             }
         }
     }
     else {
-        $failure = {
-            "expected: '" ~ expected ~ "'\n     got: (" ~ got.^name ~ ")"
-        };
+        $failure = { exgo "'$(expected)'", "($(got).^name())" };
     }
     $Tester.test: ?$test, desc, $failure;
 }
 
 multi sub isnt(Mu \got, Mu:U \expected, \desc = '') is export {
-    $Tester.test: (got.defined or got !=== expected), desc, {
-        "expected: anything except '" ~ expected.perl
-        ~ "'\n     got: '" ~ got.perl ~ "'"
-    };
+    $Tester.test: (got.defined or got !=== expected), desc,
+        { exgo "anything except '$(expected.perl)'", "'$(got.perl)'" };
 }
 multi sub isnt(Mu \got, Mu:D \expected, \desc = '') is export {
-    $Tester.test: (not got.defined or got ne expected), desc, {
-        "expected: anything except '" ~ expected.perl
-        ~ "'\n     got: '" ~ got.perl ~ "'"
-    };
+    $Tester.test: (not got.defined or got ne expected), desc,
+        { exgo "anything except '$(expected.perl)'", "'$(got.perl)'" };
 }
 
 multi sub cmp-ok(Mu \got, &op, Mu \expected, \desc = '') is export {
@@ -431,8 +421,6 @@ class Tester {
                                           .subst(:g, rx/^^'#' \s+ $$/, '');
     }
 }
-
-"expected: " ~ "\n     got: " ~
 
 sub exgo (\expected, \got) { 'expected: ' ~ expected ~ "\n     got: " ~ got }
 sub eval-exception(\code) { try EVAL code; $! }
