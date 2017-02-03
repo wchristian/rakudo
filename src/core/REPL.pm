@@ -8,31 +8,28 @@ do {
 
         while $low <= $high {
             my $middle = floor($low + ($high - $low) / 2);
-
             my $middle_elem = @values[$middle];
 
             if $middle == @values.end {
-                if $value eq $middle_elem {
-                    return;
-                } elsif $value lt $middle_elem {
+                return if $value eq $middle_elem;
+                if $value lt $middle_elem {
                     $high = $middle - 1;
-                } else {
-                    $insert_pos = +@values;
-                    last;
+                    next;
                 }
-            } else {
-                my $middle_plus_one_elem = @values[$middle + 1];
+                $insert_pos = +@values;
+                last;
+            }
 
-                if $value eq $middle_elem || $value eq $middle_plus_one_elem {
-                    return;
-                } elsif $value lt $middle_elem {
-                    $high = $middle - 1;
-                } elsif $value gt $middle_plus_one_elem {
-                    $low = $middle + 1;
-                } else {
-                    $insert_pos = $middle + 1;
-                    last;
-                }
+            my $middle_plus_one_elem = @values[$middle + 1];
+            return if $value eq $middle_elem || $value eq $middle_plus_one_elem;
+
+            if $value lt $middle_elem {
+                $high = $middle - 1;
+            } elsif $value gt $middle_plus_one_elem {
+                $low = $middle + 1;
+            } else {
+                $insert_pos = $middle + 1;
+                last;
             }
         }
 
@@ -45,9 +42,8 @@ do {
 
         for [\~] @parts.map(* ~ '/') -> $path {
             mkdir $path;
-            unless $path.IO ~~ :d {
-                fail "Unable to mkpath '$full-path': $path is not a directory";
-            }
+            fail "Unable to mkpath '$full-path': $path is not a directory"
+              unless $path.IO ~~ :d;
         }
     }
 
@@ -56,7 +52,7 @@ do {
         my &add_history = $WHO<&add_history>;
         my $Readline = try { require Readline }
         my $read = $Readline.new;
-        if ! $*DISTRO.is-win {
+        if not $*DISTRO.is-win {
             $read.read-init-file("/etc/inputrc");
             $read.read-init-file("~/.inputrc");
         }
@@ -65,12 +61,10 @@ do {
         }
         method repl-read(Mu \prompt) {
             my $line = $read.readline(prompt);
+            return if not $line.defined;
 
-            if $line.defined {
-                $read.add-history($line);
-                $read.append-history(1, $.history-file);
-            }
-
+            $read.add-history($line);
+            $read.append-history(1, $.history-file);
             $line
         }
     }
@@ -96,18 +90,16 @@ do {
 
         method teardown-line-editor {
             my $err = linenoiseHistorySave($.history-file);
-            return if !$err;
+            return if not $err;
             note "Couldn't save your history to $.history-file";
         }
 
         method repl-read(Mu \prompt) {
             self.update-completions;
             my $line = linenoise(prompt);
+            return if not $line.defined;
 
-            if $line.defined {
-                linenoiseHistoryAdd($line);
-            }
-
+            linenoiseHistoryAdd($line);
             $line
         }
     }
@@ -129,31 +121,23 @@ do {
 
         method update-completions {
             my $context := self.compiler.context;
-
             return unless $context;
 
-            my $pad := nqp::ctxlexpad($context);
-            my $it := nqp::iterator($pad);
-
+            my $it := nqp::iterator(nqp::ctxlexpad($context));
             while $it {
-                my $e := nqp::shift($it);
-                my $k := nqp::iterkey_s($e);
+                my $k := nqp::iterkey_s(nqp::shift($it));
                 my $m = $k ~~ /^ "&"? $<word>=[\w* <.lower> \w*] $/;
-                next if !$m;
-                my $word = ~$m<word>;
-                sorted-set-insert(@!completions, $word);
+                next if not $m;
+
+                sorted-set-insert(@!completions, ~$m<word>);
             }
 
             my $PACKAGE = self.compiler.eval('$?PACKAGE', :outer_ctx($context));
-
-            for $PACKAGE.WHO.keys -> $k {
-                sorted-set-insert(@!completions, $k);
-            }
+            sorted-set-insert(@!completions, $_) for $PACKAGE.WHO.keys;
         }
 
         method extract-last-word(Str $line) {
             my $m = $line ~~ /^ $<prefix>=[.*?] <|w>$<last_word>=[\w*]$/;
-
             return ( $line, '') unless $m;
 
             ( ~$m<prefix>, ~$m<last_word> )
@@ -167,9 +151,7 @@ do {
 
             # XXX this could be more efficient if we had a smarter starting index
             gather for @!completions -> $word {
-                if $word ~~ /^ "$word-at-cursor" / {
-                    take $prefix ~ $word;
-                }
+                take $prefix ~ $word if $word ~~ /^ "$word-at-cursor" /;
             }
         }
     }
@@ -196,9 +178,8 @@ do {
                     }
                     default {
                         say "I ran into a problem while trying to set up $module-name: $_";
-                        if $fallback {
-                            say "Falling back to $fallback (if present)";
-                        }
+                        say "Falling back to $fallback (if present)"
+                          if $fallback;
                         $problem = True;
                     }
                 }
@@ -228,7 +209,7 @@ do {
             );
 
             if %*ENV<RAKUDO_LINE_EDITOR> -> $line-editor {
-                if !%editor-to-mixin{$line-editor} {
+                if not %editor-to-mixin{$line-editor} {
                     say "Unrecognized line editor '$line-editor'";
                     return $self but FallbackBehavior;
                 }
@@ -247,19 +228,15 @@ do {
             ( $new-self, $problem ) = mixin-linenoise($self);
             return $new-self if $new-self;
 
-            if $problem {
-                say 'Continuing without tab completions or line editor';
-                say 'You may want to consider using rlwrap for simple line editor functionality';
-            } elsif !$*DISTRO.is-win {
-                say 'You may want to `zef install Readline` or `zef install Linenoise` or use rlwrap for a line editor';
-            }
-            say '';
+            say $problem ?? "Continuing without tab completions or line editor\nYou may want to consider using rlwrap for simple line editor functionality"
+                :: not $*DISTRO.is-win ?? 'You may want to `zef install Readline` or `zef install Linenoise` or use rlwrap for a line editor'
+                :: '';
 
             $self but FallbackBehavior
         }
 
         method new(Mu \compiler, Mu \adverbs) {
-            my $multi-line-enabled = !%*ENV<RAKUDO_DISABLE_MULTILINE>;
+            my $multi-line-enabled = not %*ENV<RAKUDO_DISABLE_MULTILINE>;
             my $self = self.bless();
             $self.init(compiler, $multi-line-enabled);
             $self = mixin-line-editor($self);
@@ -312,12 +289,11 @@ do {
         method interactive_prompt() { '> ' }
 
         method repl-loop(*%adverbs) {
-
             say "To exit type 'exit' or '^D'";
 
             my $prompt;
             my $code;
-            sub reset(--> Nil) {
+            sub reset(--> Nil) { # this name should be a little more verbose
                 $code = '';
                 $prompt = self.interactive_prompt;
             }
@@ -326,18 +302,15 @@ do {
             REPL: loop {
                 my $newcode = self.repl-read(~$prompt);
 
-                my $initial_out_position = $*OUT.tell;
+                my $initial_out_position = $*OUT.tell; # XXX why is this here? is it affected by the repl-read above?
+                                                       # what would be the next location where it is affected?
+                                                       # i think it should be moved to the last possible location,
+                                                       # and gain an explanatory comment
 
-                # An undef $newcode implies ^D or similar
-                if !$newcode.defined {
-                    last;
-                }
+                last if not $newcode.defined; # An undef $newcode implies ^D or similar
 
                 $code = $code ~ $newcode ~ "\n";
-
-                if $code ~~ /^ <.ws> $/ {
-                    next;
-                }
+                next if $code ~~ /^ <.ws> $/;
 
                 my $*CTXSAVE := self;
                 my $*MAIN_CTX;
@@ -358,22 +331,16 @@ do {
                     next;
                 }
 
-                if $*MAIN_CTX {
-                    $!save_ctx := $*MAIN_CTX;
-                }
-
+                $!save_ctx := $*MAIN_CTX if $*MAIN_CTX;
                 reset;
 
                 # Only print the result if there wasn't some other output
-                if $initial_out_position == $*OUT.tell {
-                    self.repl-print($output);
-                }
+                self.repl-print($output) if $initial_out_position == $*OUT.tell;
 
                 # Why doesn't the catch-default in repl-eval catch all?
                 CATCH {
                     default { say $_; reset }
                 }
-
             }
 
             self.teardown;
@@ -403,12 +370,9 @@ do {
         method history-file returns Str {
             return ~$!history-file if $!history-file.defined;
 
-            $!history-file = do
-                if $*ENV<RAKUDO_HIST> {
-                    IO::Path.new($*ENV<RAKUDO_HIST>)
-                } else {
-                    IO::Path.new($*HOME).child('.perl6').child('rakudo-history')
-                }
+            $!history-file = $*ENV<RAKUDO_HIST>
+                ?? IO::Path.new($*ENV<RAKUDO_HIST>)
+                !! IO::Path.new($*HOME).child('.perl6').child('rakudo-history');
             try {
                 mkpath($!history-file);
 
