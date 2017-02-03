@@ -60,9 +60,8 @@ do {
             $read.read-history($.history-file);
         }
         method repl-read(Mu \prompt) {
-            my $line = $read.readline(prompt);
-            return if not $line.defined;
-
+            return without
+              my $line = $read.readline(prompt);
             $read.add-history($line);
             $read.append-history(1, $.history-file);
             $line
@@ -96,9 +95,8 @@ do {
 
         method repl-read(Mu \prompt) {
             self.update-completions;
-            my $line = linenoise(prompt);
-            return if not $line.defined;
-
+            return without
+              my $line = linenoise(prompt);
             linenoiseHistoryAdd($line);
             $line
         }
@@ -300,14 +298,13 @@ do {
             reset;
 
             REPL: loop {
-                my $newcode = self.repl-read(~$prompt);
+                last without # An undef $newcode implies ^D or similar
+                  my $newcode = self.repl-read(~$prompt);
 
                 my $initial_out_position = $*OUT.tell; # XXX why is this here? is it affected by the repl-read above?
                                                        # what would be the next location where it is affected?
                                                        # i think it should be moved to the last possible location,
                                                        # and gain an explanatory comment
-
-                last if not $newcode.defined; # An undef $newcode implies ^D or similar
 
                 $code = $code ~ $newcode ~ "\n";
                 next if $code ~~ /^ <.ws> $/;
@@ -368,7 +365,7 @@ do {
         }
 
         method history-file returns Str {
-            return ~$!history-file if $!history-file.defined;
+            return ~$!history-file with $!history-file;
 
             $!history-file = $*ENV<RAKUDO_HIST>
                 ?? IO::Path.new($*ENV<RAKUDO_HIST>)
